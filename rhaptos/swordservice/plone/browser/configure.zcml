@@ -4,9 +4,16 @@
             
             <browser:page
                 for="*"
-                name="service-document"
-                class=".sword.SWORDService"
+                name="sword-service-document"
+                class=".sword.SWORDServiceDocument"
                 template="servicedocument.pt"
+                permission="zope2.View"
+            />
+            
+            <browser:page
+                for="*"
+                name="sword"
+                class=".sword.SWORDDeposit"
                 permission="zope2.View"
             />
 </configure>
