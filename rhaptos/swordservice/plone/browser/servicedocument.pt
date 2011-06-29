@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding='utf-8'?>
+<service xmlns="http://www.w3.org/2007/app"
+         xmlns:atom="http://www.w3.org/2005/Atom"
+         xmlns:sword="http://purl.org/net/sword/"
+         xmlns:dcterms="http://purl.org/dc/terms/"
+         xmlns:tal="http://xml.zope.org/namespaces/tal" >
+
+ <sword:version>2.0</sword:version>
+ <sword:verbose>false</sword:verbose>
+ <sword:noop>true</sword:noop>
+ <sword:maxuploadsize>60000</sword:maxuploadsize>
+ <workspace>
+
+   <atom:title tal:content="context/@@plone_portal_state/portal_title" >Plone</atom:title>
+   <tal:collections tal:repeat="collection view/collections" >
+        
+        <collection tal:attributes="href string:${collection/getURL}/sword">
+        <atom:title tal:content="collection/Title"> Folder Title </atom:title>
+        <accept>application/zip</accept>
+        <sword:mediation>false</sword:mediation>
+        <sword:treatment>Upload a zip package to a Plone folder .</sword:treatment>
+
+        <dcterms:abstract tal:content="collection/Description"> </dcterms:abstract>
+        </collection>
+        
+    </tal:collections>
+   
+ </workspace>
+</service>
