@@ -1,19 +1,18 @@
-<configure  xmlns="http://namespaces.zope.org/zope"
-            xmlns:browser="http://namespaces.zope.org/browser"
-            xmlns:five="http://namespaces.zope.org/five">
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:five="http://namespaces.zope.org/five">
             
-            <browser:page
-                for="*"
-                name="sword-service-document"
-                class=".sword.SWORDServiceDocument"
-                template="servicedocument.pt"
-                permission="zope2.View"
-            />
-            
-            <browser:page
-                for="*"
-                name="sword"
-                class=".sword.SWORDDeposit"
-                permission="zope2.View"
-            />
+    <browser:page
+        for="*"
+        name="sword"
+        class=".sword.SWORDService"
+        permission="zope2.View" />
+
+    <adapter
+        for=".sword.ISWORDService
+             zope.publisher.interfaces.http.IHTTPRequest"
+        provides="zope.publisher.interfaces.IPublishTraverse"
+        factory=".sword.SWORDTraversel" />
+
 </configure>
