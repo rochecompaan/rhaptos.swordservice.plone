@@ -68,9 +68,9 @@ class SWORDTraversel(DefaultPublishTraverse):
 
     def publishTraverse(self, request, name):
         if name == 'service-document':
-            return self.context.servicedocument()
+            return self.context.servicedocument
         elif name == 'edit-document':
-            return self.context.editdocument()
+            return self.context.editdocument
         else:
             return super(SWORDTraversel, self).publishTraverse(request, name)
 
