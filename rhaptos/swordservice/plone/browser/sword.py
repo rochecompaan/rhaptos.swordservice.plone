@@ -4,15 +4,20 @@ from cStringIO import StringIO
 
 from zope.interface import Interface, implements
 from zope.publisher.interfaces.http import IHTTPRequest
-from zope.component import adapts, getMultiAdapter
+from zope.component import adapts, getMultiAdapter, queryUtility
 from zope.contenttype import guess_content_type
-
 from Acquisition import aq_inner
 from ZPublisher.BaseRequest import DefaultPublishTraverse
 from zExceptions import Unauthorized
+from webdav.NullResource import NullResource
+from plone.i18n.normalizer.interfaces import IIDNormalizer
+
 from Products.Five import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from Products.CMFCore.utils import getToolByName
+from Products.CMFCore.interfaces import IFolderish
+
+from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
 
 class ISWORDService(Interface):
     """ Marker interface for SWORD service """
@@ -22,58 +27,25 @@ class SWORDService(BrowserView):
     implements(ISWORDService)
 
     servicedocument = ViewPageTemplateFile('servicedocument.pt')
+    editdocument = ViewPageTemplateFile('editdocument.pt')
 
     def __call__(self):
         assert self.request.method == 'POST',"Method %s not supported" % (
             self.request.method)
-        context = aq_inner(self.context)
-        content_type = self.request.getHeader('content-type')
-        disposition = self.request.getHeader('content-disposition')
-        filename = None
-        if disposition is not None:
-            try:
-                filename = [x for x in disposition.split(';') \
-                    if x.strip().startswith('filename=')][0][10:]
-            except IndexError:
-                pass
 
-        body = self.request.get('BODY')
-        if content_type is None and not (filename is None and body is None):
-            content_type, encoding = guess_content_type(filename, body)
+        # Adapt and call
+        adapter = getMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDContentAdapter)
+        ob = adapter()
 
-        # If we couldn't guess either, assume its octet-stream
-        if content_type is None:
-            content_type = "application/octet-stream"
-
-        # If no filename, make one up
-        if filename is None:
-            filename = context.generateUniqueId(
-                type_name=content_type.replace('/', '_'))
-
-        # PUT_factory is implemented by PortalFolder
-        factory = getattr(context, 'PUT_factory', None)
-        assert factory is not None, "Parent does not implement PUT_factory"
-
-        ob = factory(filename, content_type, body)
-
-        # Persist ob in context
-        try:
-            context._verifyObjectPaste(ob.__of__(context), 0)
-        except CopyError:
-             sMsg = 'Unable to create object of class %s in %s: %s' % \
-                    (ob.__class__, repr(context), sys.exc_info()[1],)
-             raise Unauthorized, sMsg
-
-        context._setObject(filename, ob)
-        ob = context._getOb(filename)
-        ob.PUT(self.request, self.request.response)
-        ob.setTitle(filename)
-        ob.reindexObject(idxs='Title')
-
-        self.request.response.setHeader('Location', ob.absolute_url())
+        # We must return status 201, and Location must be set to the edit IRI
+        self.request.response.setHeader('Location', '%s/sword/edit-document' % ob.absolute_url())
         self.request.response.setStatus(201)
-        self.request.response.setBody('')
-        return None
+
+        # Return the optional deposit receipt
+        view = ob.restrictedTraverse('sword')
+        return ViewPageTemplateFile('editdocument.pt')(view, upload=True)
+
 
     def collections(self):
         """Return all folders we have access to as collection targets"""
@@ -97,6 +69,42 @@ class SWORDTraversel(DefaultPublishTraverse):
     def publishTraverse(self, request, name):
         if name == 'service-document':
             return self.context.servicedocument()
+        elif name == 'edit-document':
+            return self.context.editdocument()
         else:
             return super(SWORDTraversel, self).publishTraverse(request, name)
 
+class PloneFolderSwordAdapter(object):
+    adapts(IFolderish, IHTTPRequest)
+
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+    def __call__(self):
+        content_type = self.request.getHeader('content-type')
+        disposition = self.request.getHeader('content-disposition')
+        filename = None
+        if disposition is not None:
+            try:
+                filename = [x for x in disposition.split(';') \
+                    if x.strip().startswith('filename=')][0][10:]
+            except IndexError:
+                pass
+
+        # If no filename, make one up, otherwise just make sure its http safe
+        if filename is None:
+            safe_filename = self.context.generateUniqueId(
+                type_name=content_type.replace('/', '_'))
+        else:
+            safe_filename = queryUtility(IIDNormalizer).normalize(filename)
+
+        NullResource(self.context, safe_filename, self.request).__of__(
+            self.context).PUT(self.request, self.request.response)
+
+        # Look it up and finish up, then return it.
+        ob = self.context._getOb(safe_filename)
+        ob.PUT(self.request, self.request.response)
+        ob.setTitle(filename)
+        ob.reindexObject(idxs='Title')
+        return ob

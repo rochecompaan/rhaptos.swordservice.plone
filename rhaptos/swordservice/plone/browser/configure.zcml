@@ -15,4 +15,10 @@
         provides="zope.publisher.interfaces.IPublishTraverse"
         factory=".sword.SWORDTraversel" />
 
+    <adapter
+        for="Products.CMFCore.interfaces.IFolderish
+             zope.publisher.interfaces.http.IHTTPRequest"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDContentAdapter"
+        factory=".sword.PloneFolderSwordAdapter" />
+
 </configure>
