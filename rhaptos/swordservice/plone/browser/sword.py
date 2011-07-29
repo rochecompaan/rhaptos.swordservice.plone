@@ -28,23 +28,28 @@ class SWORDService(BrowserView):
 
     servicedocument = ViewPageTemplateFile('servicedocument.pt')
     editdocument = ViewPageTemplateFile('editdocument.pt')
+    errordocument = ViewPageTemplateFile('errordocument.pt')
 
     def __call__(self):
-        assert self.request.method == 'POST',"Method %s not supported" % (
-            self.request.method)
+        try:
+            assert self.request.method == 'POST',"Method %s not supported" % (
+                self.request.method)
 
-        # Adapt and call
-        adapter = getMultiAdapter(
-            (aq_inner(self.context), self.request), ISWORDContentAdapter)
-        ob = adapter()
+            # Adapt and call
+            adapter = getMultiAdapter(
+                (aq_inner(self.context), self.request), ISWORDContentAdapter)
+            ob = adapter()
 
-        # We must return status 201, and Location must be set to the edit IRI
-        self.request.response.setHeader('Location', '%s/sword/edit' % ob.absolute_url())
-        self.request.response.setStatus(201)
+            # We must return status 201, and Location must be set to the edit IRI
+            self.request.response.setHeader('Location', '%s/sword/edit' % ob.absolute_url())
+            self.request.response.setStatus(201)
 
-        # Return the optional deposit receipt
-        view = ob.restrictedTraverse('sword')
-        return ViewPageTemplateFile('editdocument.pt')(view, upload=True)
+            # Return the optional deposit receipt
+            view = ob.restrictedTraverse('sword')
+            return ViewPageTemplateFile('editdocument.pt')(view, upload=True)
+        except:
+            self.request.response.setStatus(400)
+            return self.errordocument(traceback=sys.exc_info()[1])
 
 
     def collections(self):

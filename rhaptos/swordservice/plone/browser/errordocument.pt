@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding='utf-8'?>
+<sword:error xmlns="http://www.w3.org/2005/Atom"
+             xmlns:sword="http://purl.org/net/sword/"
+             xmlns:tal="http://xml.zope.org/namespaces/tal">
+
+    <title>ERROR</title>
+    <sword:treatment>An error occurred</sword:treatment>
+    <sword:verboseDescription tal:condition="options/traceback|nothing"
+                              tal:content="options/traceback|nothing">
+    </sword:verboseDescription>
+</sword:error>
