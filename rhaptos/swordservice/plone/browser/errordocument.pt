@@ -4,6 +4,8 @@
              xmlns:tal="http://xml.zope.org/namespaces/tal">
 
     <title>ERROR</title>
+    <summary tal:content="options/error|nothing"
+             tal:condition="options/error|nothing">Method not supported</summary>
     <sword:treatment>An error occurred</sword:treatment>
     <sword:verboseDescription tal:condition="options/traceback|nothing"
                               tal:content="options/traceback|nothing">

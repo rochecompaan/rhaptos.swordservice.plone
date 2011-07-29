@@ -1,4 +1,5 @@
 import sys
+import traceback
 import zipfile
 from cStringIO import StringIO
 
@@ -8,7 +9,7 @@ from zope.component import adapts, getMultiAdapter, queryUtility
 from zope.contenttype import guess_content_type
 from Acquisition import aq_inner
 from ZPublisher.BaseRequest import DefaultPublishTraverse
-from zExceptions import Unauthorized
+from zExceptions import Unauthorized, MethodNotAllowed
 from webdav.NullResource import NullResource
 from plone.i18n.normalizer.interfaces import IIDNormalizer
 
@@ -22,6 +23,23 @@ from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
 class ISWORDService(Interface):
     """ Marker interface for SWORD service """
 
+def show_error_document(func):
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        def _show(status):
+            formatted_tb = traceback.format_exc()
+            self.request.response.setStatus(status)
+            return self.errordocument(error=sys.exc_info()[1], 
+                traceback=formatted_tb)
+        try:
+            value = func(*args, **kwargs)
+        except MethodNotAllowed:
+            return _show(405)
+        except:
+            return _show(400)
+        return value
+    return wrapper
+
 class SWORDService(BrowserView):
 
     implements(ISWORDService)
@@ -30,26 +48,23 @@ class SWORDService(BrowserView):
     editdocument = ViewPageTemplateFile('editdocument.pt')
     errordocument = ViewPageTemplateFile('errordocument.pt')
 
+    @show_error_document
     def __call__(self):
-        try:
-            assert self.request.method == 'POST',"Method %s not supported" % (
-                self.request.method)
+        if self.request.method != 'POST':
+            raise MethodNotAllowed("Method %s not supported" % self.request.method)
 
-            # Adapt and call
-            adapter = getMultiAdapter(
-                (aq_inner(self.context), self.request), ISWORDContentAdapter)
-            ob = adapter()
+        # Adapt and call
+        adapter = getMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDContentAdapter)
+        ob = adapter()
 
-            # We must return status 201, and Location must be set to the edit IRI
-            self.request.response.setHeader('Location', '%s/sword/edit' % ob.absolute_url())
-            self.request.response.setStatus(201)
+        # We must return status 201, and Location must be set to the edit IRI
+        self.request.response.setHeader('Location', '%s/sword/edit' % ob.absolute_url())
+        self.request.response.setStatus(201)
 
-            # Return the optional deposit receipt
-            view = ob.restrictedTraverse('sword')
-            return ViewPageTemplateFile('editdocument.pt')(view, upload=True)
-        except:
-            self.request.response.setStatus(400)
-            return self.errordocument(traceback=sys.exc_info()[1])
+        # Return the optional deposit receipt
+        view = ob.restrictedTraverse('sword')
+        return ViewPageTemplateFile('editdocument.pt')(view, upload=True)
 
 
     def collections(self):
