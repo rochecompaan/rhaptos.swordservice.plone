@@ -39,7 +39,7 @@ class SWORDService(BrowserView):
         ob = adapter()
 
         # We must return status 201, and Location must be set to the edit IRI
-        self.request.response.setHeader('Location', '%s/sword/edit-document' % ob.absolute_url())
+        self.request.response.setHeader('Location', '%s/sword/edit' % ob.absolute_url())
         self.request.response.setStatus(201)
 
         # Return the optional deposit receipt
@@ -69,7 +69,7 @@ class SWORDTraversel(DefaultPublishTraverse):
     def publishTraverse(self, request, name):
         if name == 'service-document':
             return self.context.servicedocument
-        elif name == 'edit-document':
+        elif name == 'edit':
             return self.context.editdocument
         else:
             return super(SWORDTraversel, self).publishTraverse(request, name)
