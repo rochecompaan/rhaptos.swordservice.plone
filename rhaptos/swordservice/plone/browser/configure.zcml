@@ -15,10 +15,25 @@
         provides="zope.publisher.interfaces.IPublishTraverse"
         factory=".sword.SWORDTraversel" />
 
+    <!-- This adapts folderish objects into sword collections. Override this
+         for your own types -->
     <adapter
         for="Products.CMFCore.interfaces.IFolderish
              zope.publisher.interfaces.http.IHTTPRequest"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDContentAdapter"
         factory=".sword.PloneFolderSwordAdapter" />
+
+    <!-- Adapters for ISWORDEditDocument and ISWORDServiceDocument. Folderish
+         objects are collections and have a service document, Files are
+         uploaded content and have an edit-iri -->
+    <adapter
+        for="Products.CMFCore.interfaces.IFolderish"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDServiceDocument"
+        factory=".sword.ServiceDocumentAdapter" />
+
+    <adapter
+        for="Products.ATContentTypes.interfaces.IATFile"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDEditDocument"
+        factory=".sword.EditDocumentAdapter" />
 
 </configure>

@@ -19,6 +19,8 @@ from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.interfaces import IFolderish
 
 from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
+from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
+from rhaptos.swordservice.plone.interfaces import ISWORDEditDocument
 
 class ISWORDService(Interface):
     """ Marker interface for SWORD service """
@@ -88,13 +90,41 @@ class SWORDTraversel(DefaultPublishTraverse):
 
     def publishTraverse(self, request, name):
         if name == 'service-document':
-            return self.context.servicedocument
+            # .context is the @@sword view
+            # .context.context is the context of the @@sword view
+            # We want an adapter for .context.context.
+            return ISWORDServiceDocument(self.context.context)(self.context)
         elif name == 'edit':
-            return self.context.editdocument
+            return ISWORDEditDocument(self.context.context)(self.context)
         else:
             return super(SWORDTraversel, self).publishTraverse(request, name)
 
+class ServiceDocumentAdapter(object):
+    """ Adapts a context and renders a service document for it. The real
+        magic is in the zcml, where this class is set as the factory that
+        adapts folderish items into sword collections. """
+    def __init__(self, context):
+        self.context = context
+
+    def __call__(self, swordview):
+        return swordview.servicedocument
+
+class EditDocumentAdapter(object):
+    """ Adapts a context and renders an edit document for it. This should
+        only be possible for uploaded content. This class is therefore bound
+        to ATFile (for the default plone installation) in zcml. """
+    def __init__(self, context):
+        self.context = context
+
+    def __call__(self, swordview):
+        return swordview.editdocument
+
 class PloneFolderSwordAdapter(object):
+    """ Adapts a context to an ISWORDContentAdapter. An ISWORDContentAdapter
+        contains the functionality to actually create the content. Write
+        your own if you don't want the default behaviour, which is very
+        webdav like, it just creates a file corresponding to whatever you
+        uploaded. """
     adapts(IFolderish, IHTTPRequest)
 
     def __init__(self, context, request):
