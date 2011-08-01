@@ -26,6 +26,9 @@ class ISWORDService(Interface):
     """ Marker interface for SWORD service """
 
 def show_error_document(func):
+    """ This is a decorator to be applied on the methods in the SwordService
+        class. It checks for exceptions, and renders an error document
+        with the stack trace embedded in the correct markup. """
     def wrapper(*args, **kwargs):
         self = args[0]
         def _show(status):
