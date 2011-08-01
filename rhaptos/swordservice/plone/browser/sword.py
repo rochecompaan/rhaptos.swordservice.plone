@@ -20,7 +20,7 @@ from Products.CMFCore.interfaces import IFolderish
 
 from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
-from rhaptos.swordservice.plone.interfaces import ISWORDEditDocument
+from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
 
 class ISWORDService(Interface):
     """ Marker interface for SWORD service """
@@ -95,7 +95,7 @@ class SWORDTraversel(DefaultPublishTraverse):
             # We want an adapter for .context.context.
             return ISWORDServiceDocument(self.context.context)(self.context)
         elif name == 'edit':
-            return ISWORDEditDocument(self.context.context)(self.context)
+            return ISWORDDepositReceipt(self.context.context)(self.context)
         else:
             return super(SWORDTraversel, self).publishTraverse(request, name)
 

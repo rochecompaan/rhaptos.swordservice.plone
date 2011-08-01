@@ -8,6 +8,6 @@ class ISWORDServiceDocument(Interface):
     """ Marker interface for content that can be adapted to show a service
         document. """
 
-class ISWORDEditDocument(Interface):
+class ISWORDDepositReceipt(Interface):
     """ Marker interface for contant that can be adapted to show an edit
         document. """
