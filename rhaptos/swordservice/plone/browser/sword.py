@@ -50,7 +50,7 @@ class SWORDService(BrowserView):
     implements(ISWORDService)
 
     servicedocument = ViewPageTemplateFile('servicedocument.pt')
-    editdocument = ViewPageTemplateFile('editdocument.pt')
+    depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
     errordocument = ViewPageTemplateFile('errordocument.pt')
 
     @show_error_document
@@ -69,7 +69,7 @@ class SWORDService(BrowserView):
 
         # Return the optional deposit receipt
         view = ob.restrictedTraverse('sword')
-        return ViewPageTemplateFile('editdocument.pt')(view, upload=True)
+        return ViewPageTemplateFile('depositreceipt.pt')(view, upload=True)
 
 
     def collections(self):
@@ -120,7 +120,7 @@ class EditDocumentAdapter(object):
         self.context = context
 
     def __call__(self, swordview):
-        return swordview.editdocument
+        return swordview.depositreceipt
 
 class PloneFolderSwordAdapter(object):
     """ Adapts a context to an ISWORDContentAdapter. An ISWORDContentAdapter
