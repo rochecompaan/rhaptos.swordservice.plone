@@ -5,7 +5,7 @@ from cStringIO import StringIO
 
 from zope.interface import Interface, implements
 from zope.publisher.interfaces.http import IHTTPRequest
-from zope.component import adapts, getMultiAdapter, queryUtility
+from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
 from zope.contenttype import guess_content_type
 from Acquisition import aq_inner
 from ZPublisher.BaseRequest import DefaultPublishTraverse
@@ -19,6 +19,7 @@ from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.interfaces import IFolderish
 
 from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
+from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
 from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
 
@@ -76,7 +77,20 @@ class SWORDService(BrowserView):
         """Return all folders we have access to as collection targets"""
         pc = getToolByName(self.context, "portal_catalog")
         return pc(portal_type='Folder', allowedRolesAndUsers=['contributor'])
-    
+
+    def information(self, ob=None):
+        """ Return additional or overriding information about our context. By
+            default there is no extra information, but if you register an
+            adapter for your context that provides us with a
+            ISWORDContentAdapter, you can generate or override that extra
+            information by implementing a method named information that
+            returns a dictionary.  Valid keys are author and updated. """
+        if ob is None:
+            ob = self.context
+        adapter = queryAdapter(ob, ISWORDContentAdapter)
+        if adapter is not None:
+            return adapter.information()
+        return {}
 
 class SWORDTraversel(DefaultPublishTraverse):
     """ Implement custom traversal for ISWORDService to allow the use
