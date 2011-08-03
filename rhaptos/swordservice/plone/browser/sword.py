@@ -6,7 +6,7 @@ from cStringIO import StringIO
 from zope.interface import Interface, implements
 from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
-from Acquisition import aq_inner
+from Acquisition import aq_inner, aq_base
 from zExceptions import Unauthorized, MethodNotAllowed
 from webdav.NullResource import NullResource
 
@@ -88,8 +88,12 @@ class SWORDService(BrowserView):
 
         # Return the optional deposit receipt
         view = ob.restrictedTraverse('sword')
-        return ViewPageTemplateFile('depositreceipt.pt')(view, upload=True)
 
+        # Look up the adapter that produces the deposit receipt, and wrap
+        # it properly. This is needed because @@sword does not acquire
+        # properly in plone 2.5. To be quite honest, I'm not sure why this
+        # works, but you end up with the same aq_chain as lower down.
+        return ISWORDDepositReceipt(ob)(view).__of__(view.context)(upload=True)
 
     def collections(self):
         """Return all folders we have access to as collection targets"""
