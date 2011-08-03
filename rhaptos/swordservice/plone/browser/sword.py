@@ -141,16 +141,22 @@ class ServiceDocumentAdapter(object):
     """ Adapts a context and renders a service document for it. The real
         magic is in the zcml, where this class is set as the factory that
         adapts folderish items into sword collections. """
+
+    implements(ISWORDServiceDocument)
+
     def __init__(self, context):
         self.context = context
 
     def __call__(self, swordview):
         return swordview.servicedocument
 
-class EditDocumentAdapter(object):
+class DepositReceiptAdapter(object):
     """ Adapts a context and renders an edit document for it. This should
         only be possible for uploaded content. This class is therefore bound
         to ATFile (for the default plone installation) in zcml. """
+
+    implements(ISWORDDepositReceipt)
+
     def __init__(self, context):
         self.context = context
 
