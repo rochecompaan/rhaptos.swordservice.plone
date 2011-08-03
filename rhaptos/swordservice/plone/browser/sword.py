@@ -73,8 +73,9 @@ class SWORDService(BrowserView):
 
     @show_error_document
     def __call__(self):
-        if self.request.method != 'POST':
-            raise MethodNotAllowed("Method %s not supported" % self.request.method)
+        method = self.request.get('REQUEST_METHOD')
+        if method != 'POST':
+            raise MethodNotAllowed("Method %s not supported" % method)
 
         # Adapt and call
         adapter = getMultiAdapter(
