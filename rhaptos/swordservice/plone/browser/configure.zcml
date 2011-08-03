@@ -20,7 +20,7 @@
     <adapter
         for="Products.CMFCore.interfaces.IFolderish
              zope.publisher.interfaces.http.IHTTPRequest"
-        provides="rhaptos.swordservice.plone.interfaces.ISWORDContentAdapter"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDContentUploadAdapter"
         factory=".sword.PloneFolderSwordAdapter" />
 
     <!-- Adapters for ISWORDDepositReceipt and ISWORDServiceDocument. Folderish

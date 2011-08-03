@@ -18,7 +18,7 @@ from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.interfaces import IFolderish
 
-from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
+from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
 from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
 
@@ -60,7 +60,7 @@ class SWORDService(BrowserView):
 
         # Adapt and call
         adapter = getMultiAdapter(
-            (aq_inner(self.context), self.request), ISWORDContentAdapter)
+            (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
         ob = adapter()
 
         # We must return status 201, and Location must be set to the edit IRI
@@ -123,11 +123,11 @@ class EditDocumentAdapter(object):
         return swordview.depositreceipt
 
 class PloneFolderSwordAdapter(object):
-    """ Adapts a context to an ISWORDContentAdapter. An ISWORDContentAdapter
-        contains the functionality to actually create the content. Write
-        your own if you don't want the default behaviour, which is very
-        webdav like, it just creates a file corresponding to whatever you
-        uploaded. """
+    """ Adapts a context to an ISWORDContentUploadAdapter. An
+        ISWORDContentUploadAdapter contains the functionality to actually
+        create the content. It returns the created object. Write your own if
+        you don't want the default behaviour, which is very webdav like, it
+        just creates a file corresponding to whatever you uploaded. """
     adapts(IFolderish, IHTTPRequest)
 
     def __init__(self, context, request):
@@ -135,6 +135,8 @@ class PloneFolderSwordAdapter(object):
         self.request = request
 
     def __call__(self):
+        """ Calling the adapter does the actual work of importing the content.
+        """
         content_type = self.request.getHeader('content-type')
         disposition = self.request.getHeader('content-disposition')
         filename = None
