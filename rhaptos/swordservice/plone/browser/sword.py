@@ -207,6 +207,7 @@ class PloneFolderSwordAdapter(object):
 
 # This happens if we don't have DefaultPublishTraverse, ie, on old plones
 if DefaultPublishTraverse is object:
+    @show_error_document
     def _sword__bobo_traverse__(self, REQUEST, name):
         adapter = SWORDTraversel.adapters.get(name, None)
         if adapter is not None:
