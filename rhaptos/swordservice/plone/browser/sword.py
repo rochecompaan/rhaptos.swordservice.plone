@@ -41,6 +41,8 @@ def show_error_document(func):
             value = func(*args, **kwargs)
         except MethodNotAllowed:
             return _show(405)
+        except Unauthorized:
+            return _show(401)
         except:
             return _show(400)
         return value
