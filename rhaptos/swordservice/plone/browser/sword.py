@@ -11,7 +11,7 @@ from zExceptions import Unauthorized, MethodNotAllowed
 from webdav.NullResource import NullResource
 
 from Products.Five import BrowserView
-from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+from zope.app.pagetemplate.viewpagetemplatefile import ViewPageTemplateFile
 from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.interfaces import IFolderish
 
