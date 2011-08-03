@@ -22,9 +22,9 @@ from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
 
 try:
     from plone.i18n.normalizer.interfaces import IIDNormalizer
-    normalize_filename = lambda f: queryUtility(IIDNormalizer).normalize(f)
+    normalize_filename = lambda c,f: queryUtility(IIDNormalizer).normalize(f)
 except ImportError:
-    normalize_filename = lambda f: getToolByName(
+    normalize_filename = lambda c,f: getToolByName(c,
         'plone_utils').normalizeString(f)
 
 try:
@@ -204,7 +204,7 @@ class PloneFolderSwordAdapter(object):
             safe_filename = self.context.generateUniqueId(
                 type_name=content_type.replace('/', '_'))
         else:
-            safe_filename = normalize_filename(filename)
+            safe_filename = normalize_filename(self.context, filename)
 
         NullResource(self.context, safe_filename, self.request).__of__(
             self.context).PUT(self.request, self.request.response)
