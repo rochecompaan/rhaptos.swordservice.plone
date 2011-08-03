@@ -6,12 +6,9 @@ from cStringIO import StringIO
 from zope.interface import Interface, implements
 from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
-from zope.contenttype import guess_content_type
 from Acquisition import aq_inner
-from ZPublisher.BaseRequest import DefaultPublishTraverse
 from zExceptions import Unauthorized, MethodNotAllowed
 from webdav.NullResource import NullResource
-from plone.i18n.normalizer.interfaces import IIDNormalizer
 
 from Products.Five import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
@@ -22,6 +19,24 @@ from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
 from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
+
+try:
+    from plone.i18n.normalizer.interfaces import IIDNormalizer
+    normalize_filename = lambda f: queryUtility(IIDNormalizer).normalize(f)
+except ImportError:
+    normalize_filename = lambda f: getToolByName(
+        'plone_utils').normalizeString(f)
+
+try:
+    from ZPublisher.BaseRequest import DefaultPublishTraverse
+except ImportError:
+    # Old plone, see below for patch
+    DefaultPublishTraverse = object
+
+try:
+    from zope.contenttype import guess_content_type
+except ImportError:
+    from zope.app.content_types import guess_content_type
 
 class ISWORDService(Interface):
     """ Marker interface for SWORD service """
@@ -107,14 +122,18 @@ class SWORDTraversel(DefaultPublishTraverse):
 
     adapts(ISWORDService, IHTTPRequest)
 
+    adapters = {
+        'service-document': ISWORDServiceDocument,
+        'edit': ISWORDDepositReceipt
+    }
+
     def publishTraverse(self, request, name):
-        if name == 'service-document':
+        adapter = self.adapters.get(name, None)
+        if adapter is not None:
             # .context is the @@sword view
             # .context.context is the context of the @@sword view
             # We want an adapter for .context.context.
-            return ISWORDServiceDocument(self.context.context)(self.context)
-        elif name == 'edit':
-            return ISWORDDepositReceipt(self.context.context)(self.context)
+            return adapter(self.context.context)(self.context)
         else:
             return super(SWORDTraversel, self).publishTraverse(request, name)
 
@@ -168,7 +187,7 @@ class PloneFolderSwordAdapter(object):
             safe_filename = self.context.generateUniqueId(
                 type_name=content_type.replace('/', '_'))
         else:
-            safe_filename = queryUtility(IIDNormalizer).normalize(filename)
+            safe_filename = normalize_filename(filename)
 
         NullResource(self.context, safe_filename, self.request).__of__(
             self.context).PUT(self.request, self.request.response)
@@ -179,3 +198,13 @@ class PloneFolderSwordAdapter(object):
         ob.setTitle(filename)
         ob.reindexObject(idxs='Title')
         return ob
+
+# This happens if we don't have DefaultPublishTraverse, ie, on old plones
+if DefaultPublishTraverse is object:
+    def _sword__bobo_traverse__(self, REQUEST, name):
+        adapter = SWORDTraversel.adapters.get(name, None)
+        if adapter is not None:
+            return adapter(self.context.context)(self.context)
+        raise AttributeError
+
+    SWORDService.__bobo_traverse__ = _sword__bobo_traverse__
