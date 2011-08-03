@@ -24,6 +24,7 @@
 
     <sword:treatment tal:content="string:Stored as ${context/id}">Stored</sword:treatment>
     <title tal:content="context/Title">My Deposit</title>
+    <id tal:content="context/absolute_url">1234</id>
     <updated tal:content="context/modified">2008-08-18T14:27:08Z</updated>
 
     <dcterms:available tal:content="context/getEffectiveDate">Date Available</dcterms:available>
