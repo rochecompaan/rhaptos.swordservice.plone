@@ -35,8 +35,8 @@
         factory=".sword.ServiceDocumentAdapter" />
 
     <adapter
-        for="Products.ATContentTypes.interfaces.IATFile"
+        for="Products.ATContentTypes.interface.file.IATFile"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDDepositReceipt"
-        factory=".sword.EditDocumentAdapter" />
+        factory=".sword.DepositReceiptAdapter" />
 
 </configure>
