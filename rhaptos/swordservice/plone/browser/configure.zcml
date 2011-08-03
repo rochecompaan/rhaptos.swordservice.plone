@@ -1,6 +1,7 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
     xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
     xmlns:five="http://namespaces.zope.org/five">
             
     <browser:page
@@ -9,7 +10,9 @@
         class=".sword.SWORDService"
         permission="zope2.View" />
 
+    <!-- Only register this for plone 4, older versions will use bobo -->
     <adapter
+        zcml:condition="have plone-4"
         for=".sword.ISWORDService
              zope.publisher.interfaces.http.IHTTPRequest"
         provides="zope.publisher.interfaces.IPublishTraverse"
