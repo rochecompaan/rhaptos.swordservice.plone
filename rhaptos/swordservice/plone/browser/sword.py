@@ -178,6 +178,10 @@ class PloneFolderSwordAdapter(object):
         just creates a file corresponding to whatever you uploaded. """
     adapts(IFolderish, IHTTPRequest)
 
+    def getHeader(self, name, default=None):
+        return getattr(self.request, 'getHeader', self.request.get_header)(
+            name, default)
+        
     def __init__(self, context, request):
         self.context = context
         self.request = request
@@ -185,8 +189,8 @@ class PloneFolderSwordAdapter(object):
     def __call__(self):
         """ Calling the adapter does the actual work of importing the content.
         """
-        content_type = self.request.getHeader('content-type')
-        disposition = self.request.getHeader('content-disposition')
+        content_type = self.getHeader('content-type')
+        disposition = self.getHeader('content-disposition')
         filename = None
         if disposition is not None:
             try:
