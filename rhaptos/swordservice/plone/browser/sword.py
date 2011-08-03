@@ -95,6 +95,12 @@ class SWORDService(BrowserView):
         pc = getToolByName(self.context, "portal_catalog")
         return pc(portal_type='Folder', allowedRolesAndUsers=['contributor'])
 
+    def portal_title(self):
+        try:
+            return self.context.restrictedTraverse('@@plone_portal_state').portal_title()
+        except AttributeError:
+            return getToolByName(self.context, 'portal_url').getPortalObject().Title()
+
     def information(self, ob=None):
         """ Return additional or overriding information about our context. By
             default there is no extra information, but if you register an
@@ -208,10 +214,14 @@ class PloneFolderSwordAdapter(object):
 # This happens if we don't have DefaultPublishTraverse, ie, on old plones
 if DefaultPublishTraverse is object:
     @show_error_document
-    def _sword__bobo_traverse__(self, REQUEST, name):
+    def _sword___bobo_traverse__(self, REQUEST, name):
         adapter = SWORDTraversel.adapters.get(name, None)
         if adapter is not None:
             return adapter(self.context.context)(self.context)
         raise AttributeError
 
-    SWORDService.__bobo_traverse__ = _sword__bobo_traverse__
+    def _sword_getPhysicalPath(self):
+        return self.context.getPhysicalPath() + (self.__name__,)
+
+    SWORDService.__bobo_traverse__ = _sword___bobo_traverse__
+    SWORDService.getPhysicalPath = _sword_getPhysicalPath
