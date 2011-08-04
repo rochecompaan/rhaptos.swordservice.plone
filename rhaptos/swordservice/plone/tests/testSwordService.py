@@ -44,10 +44,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         assert isinstance(view, BrowserView)
 
         # Test service-document
-        adapter = getMultiAdapter(
-            (view, request), IPublishTraverse)
-        assert bool(adapter.publishTraverse(
-            self.portal.REQUEST, 'service-document')())
+        assert bool(view.publishTraverse(request, 'service-document')())
 
         # Upload a zip file
         env = {
@@ -69,9 +66,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
 
         # Test that we can still reach the edit-iri
         view = self.portal.restrictedTraverse('perry-zip/sword')
-        adapter = getMultiAdapter((view, request), IPublishTraverse)
-        assert bool(adapter.publishTraverse(
-            request, 'edit')()), "Error in rendering Edit-iri"
+        assert bool(view.publishTraverse(request, 'edit')())
 
 # base64 representation of a small test zip file
 ZIPFILE="""\

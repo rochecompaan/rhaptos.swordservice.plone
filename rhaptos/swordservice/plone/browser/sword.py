@@ -4,6 +4,7 @@ import zipfile
 from cStringIO import StringIO
 
 from zope.interface import Interface, implements
+from zope.publisher.interfaces import IPublishTraverse
 from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
 from Acquisition import aq_inner, aq_base
@@ -26,12 +27,6 @@ try:
 except ImportError:
     normalize_filename = lambda c,f: getToolByName(c,
         'plone_utils').normalizeString(f)
-
-try:
-    from ZPublisher.BaseRequest import DefaultPublishTraverse
-except ImportError:
-    # Old plone, see below for patch
-    DefaultPublishTraverse = object
 
 try:
     from zope.contenttype import guess_content_type
@@ -65,7 +60,7 @@ def show_error_document(func):
 
 class SWORDService(BrowserView):
 
-    implements(ISWORDService)
+    implements(ISWORDService, IPublishTraverse)
 
     servicedocument = ViewPageTemplateFile('servicedocument.pt')
     depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
@@ -88,12 +83,7 @@ class SWORDService(BrowserView):
 
         # Return the optional deposit receipt
         view = ob.restrictedTraverse('sword')
-
-        # Look up the adapter that produces the deposit receipt, and wrap
-        # it properly. This is needed because @@sword does not acquire
-        # properly in plone 2.5. To be quite honest, I'm not sure why this
-        # works, but you end up with the same aq_chain as lower down.
-        return ISWORDDepositReceipt(ob)(view).__of__(view.context)(upload=True)
+        return view.publishTraverse(self.request, 'edit')(upload=True)
 
     def collections(self):
         """Return all folders we have access to as collection targets"""
@@ -120,33 +110,23 @@ class SWORDService(BrowserView):
             return adapter.information()
         return {}
 
-class SWORDTraversel(DefaultPublishTraverse):
-    """ Implement custom traversal for ISWORDService to allow the use
-        of "sword" as a namespace in our path and use the sub path to
-        determine the resource we want or action required.
-
-        Basically this gives us nice RESTful URLs eg:
-
-            <Plone Site>/sword/service-document
-            <Folder>/sword
-    """
-
-    adapts(ISWORDService, IHTTPRequest)
-
-    adapters = {
-        'service-document': ISWORDServiceDocument,
-        'edit': ISWORDDepositReceipt
-    }
-
     def publishTraverse(self, request, name):
-        adapter = self.adapters.get(name, None)
+        """ Implement custom traversal for ISWORDService to allow the use
+            of "sword" as a namespace in our path and use the sub path to
+            determine the resource we want or action required.
+
+            Basically this gives us nice RESTful URLs eg:
+
+                <Plone Site>/sword/service-document
+                <Folder>/sword
+        """
+        adapter = {
+            'service-document': ISWORDServiceDocument,
+            'edit': ISWORDDepositReceipt
+        }.get(name, None)
         if adapter is not None:
-            # .context is the @@sword view
-            # .context.context is the context of the @@sword view
-            # We want an adapter for .context.context.
-            return adapter(self.context.context)(self.context)
-        else:
-            return super(SWORDTraversel, self).publishTraverse(request, name)
+            return adapter(self.context)(self)
+        raise AttributeError
 
 class ServiceDocumentAdapter(object):
     """ Adapts a context and renders a service document for it. The real
@@ -219,18 +199,3 @@ class PloneFolderSwordAdapter(object):
         ob.setTitle(filename)
         ob.reindexObject(idxs='Title')
         return ob
-
-# This happens if we don't have DefaultPublishTraverse, ie, on old plones
-if DefaultPublishTraverse is object:
-    @show_error_document
-    def _sword___bobo_traverse__(self, REQUEST, name):
-        adapter = SWORDTraversel.adapters.get(name, None)
-        if adapter is not None:
-            return adapter(self.context.context)(self.context)
-        raise AttributeError
-
-    def _sword_getPhysicalPath(self):
-        return self.context.getPhysicalPath() + (self.__name__,)
-
-    SWORDService.__bobo_traverse__ = _sword___bobo_traverse__
-    SWORDService.getPhysicalPath = _sword_getPhysicalPath
