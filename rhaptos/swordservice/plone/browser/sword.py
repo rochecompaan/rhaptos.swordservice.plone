@@ -8,7 +8,7 @@ from zope.publisher.interfaces import IPublishTraverse
 from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
 from Acquisition import aq_inner, aq_base
-from zExceptions import Unauthorized, MethodNotAllowed
+from zExceptions import Unauthorized, MethodNotAllowed, NotFound
 from webdav.NullResource import NullResource
 
 from Products.Five import BrowserView
@@ -126,7 +126,7 @@ class SWORDService(BrowserView):
         }.get(name, None)
         if adapter is not None:
             return adapter(self.context)(self)
-        raise AttributeError
+        raise NotFound(self.context, name, request)
 
 class ServiceDocumentAdapter(object):
     """ Adapts a context and renders a service document for it. The real
