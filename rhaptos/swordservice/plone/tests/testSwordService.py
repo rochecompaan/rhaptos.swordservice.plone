@@ -65,8 +65,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         assert bool(xml), "Upload view does not return a result"
 
         # Test that we can still reach the edit-iri
-        view = self.portal.restrictedTraverse('perry-zip/sword')
-        assert bool(view.publishTraverse(request, 'edit')())
+        assert self.portal.restrictedTraverse('perry-zip/sword/edit')
 
 # base64 representation of a small test zip file
 ZIPFILE="""\
