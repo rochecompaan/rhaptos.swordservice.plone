@@ -1,6 +1,7 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
     xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
     xmlns:five="http://namespaces.zope.org/five">
             
     <browser:page
@@ -9,18 +10,12 @@
         class=".sword.SWORDService"
         permission="zope2.View" />
 
-    <adapter
-        for=".sword.ISWORDService
-             zope.publisher.interfaces.http.IHTTPRequest"
-        provides="zope.publisher.interfaces.IPublishTraverse"
-        factory=".sword.SWORDTraversel" />
-
     <!-- This adapts folderish objects into sword collections. Override this
          for your own types -->
     <adapter
         for="Products.CMFCore.interfaces.IFolderish
              zope.publisher.interfaces.http.IHTTPRequest"
-        provides="rhaptos.swordservice.plone.interfaces.ISWORDContentAdapter"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDContentUploadAdapter"
         factory=".sword.PloneFolderSwordAdapter" />
 
     <!-- Adapters for ISWORDDepositReceipt and ISWORDServiceDocument. Folderish
@@ -32,8 +27,8 @@
         factory=".sword.ServiceDocumentAdapter" />
 
     <adapter
-        for="Products.ATContentTypes.interfaces.IATFile"
+        for="Products.ATContentTypes.interface.file.IATFile"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDDepositReceipt"
-        factory=".sword.EditDocumentAdapter" />
+        factory=".sword.DepositReceiptAdapter" />
 
 </configure>

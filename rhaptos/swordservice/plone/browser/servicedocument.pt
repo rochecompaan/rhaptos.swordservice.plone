@@ -11,7 +11,7 @@
  <sword:maxuploadsize>60000</sword:maxuploadsize>
  <workspace>
 
-   <atom:title tal:content="context/@@plone_portal_state/portal_title" >Plone</atom:title>
+   <atom:title tal:content="view/portal_title" >Plone</atom:title>
    <tal:collections tal:repeat="collection view/collections" >
         
         <collection tal:attributes="href string:${collection/getURL}/sword">

@@ -1,8 +1,12 @@
 from zope.interface import Interface
 
-class ISWORDContentAdapter(Interface):
-    """ Marker interface for adapters that adapt content for sword
+class ISWORDContentUploadAdapter(Interface):
+    """ Marker interface for adapters that adapt content for sword upload
         functionality. """
+
+class ISWORDContentAdapter(Interface):
+    """ Marker interface for adapters that provide more information about
+        the adapted context. """
 
 class ISWORDServiceDocument(Interface):
     """ Marker interface for content that can be adapted to show a service
