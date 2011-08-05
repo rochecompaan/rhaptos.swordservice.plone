@@ -67,6 +67,12 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         # Test that we can still reach the edit-iri
         assert self.portal.restrictedTraverse('perry-zip/sword/edit')
 
+def test_suite():
+    from unittest import TestSuite, makeSuite
+    suite = TestSuite()
+    suite.addTest(makeSuite(TestSwordService))
+    return suite
+
 # base64 representation of a small test zip file
 ZIPFILE="""\
 UEsDBAoAAAAAAOKC/T4AAAAAAAAAAAAAAAACABwAeC9VVAkAA0jCMk5OwjJOdXgLAAEE6AMAAATo
