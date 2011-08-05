@@ -22,13 +22,6 @@ from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
 from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
 
 try:
-    from plone.i18n.normalizer.interfaces import IIDNormalizer
-    normalize_filename = lambda c,f: queryUtility(IIDNormalizer).normalize(f)
-except ImportError:
-    normalize_filename = lambda c,f: getToolByName(c,
-        'plone_utils').normalizeString(f)
-
-try:
     from zope.contenttype import guess_content_type
 except ImportError:
     from zope.app.content_types import guess_content_type
@@ -82,8 +75,7 @@ class SWORDService(BrowserView):
         self.request.response.setStatus(201)
 
         # Return the optional deposit receipt
-        view = ob.restrictedTraverse('sword')
-        return view.publishTraverse(self.request, 'edit')(upload=True)
+        return ob.unrestrictedTraverse('sword/edit')(upload=True)
 
     def collections(self):
         """Return all folders we have access to as collection targets"""
@@ -91,10 +83,8 @@ class SWORDService(BrowserView):
         return pc(portal_type='Folder', allowedRolesAndUsers=['contributor'])
 
     def portal_title(self):
-        try:
-            return self.context.restrictedTraverse('@@plone_portal_state').portal_title()
-        except AttributeError:
-            return getToolByName(self.context, 'portal_url').getPortalObject().Title()
+        """ Return the portal title. """
+        return getToolByName(self.context, 'portal_url').getPortalObject().Title()
 
     def information(self, ob=None):
         """ Return additional or overriding information about our context. By
@@ -110,7 +100,7 @@ class SWORDService(BrowserView):
             return adapter.information()
         return {}
 
-    def publishTraverse(self, request, name):
+    def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
             of "sword" as a namespace in our path and use the sub path to
             determine the resource we want or action required.
@@ -126,7 +116,14 @@ class SWORDService(BrowserView):
         }.get(name, None)
         if adapter is not None:
             return adapter(self.context)(self)
-        raise NotFound(self.context, name, request)
+        return getattr(self, name)
+        raise AttributeError, name
+
+    def getPhysicalPath(self):
+        """ The publisher calls this while recording metadata. More
+            specifically, the page template's getPhysicalPath method is called
+            by the publisher, and it calls us. """
+        return self.context.getPhysicalPath() + (self.__name__,)
 
 class ServiceDocumentAdapter(object):
     """ Adapts a context and renders a service document for it. The real
@@ -188,7 +185,8 @@ class PloneFolderSwordAdapter(object):
             safe_filename = self.context.generateUniqueId(
                 type_name=content_type.replace('/', '_'))
         else:
-            safe_filename = normalize_filename(self.context, filename)
+            safe_filename = getToolByName(self.context,
+                'plone_utils').normalizeString(filename)
 
         NullResource(self.context, safe_filename, self.request).__of__(
             self.context).PUT(self.request, self.request.response)

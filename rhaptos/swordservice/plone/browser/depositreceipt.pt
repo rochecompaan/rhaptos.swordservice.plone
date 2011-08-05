@@ -3,8 +3,7 @@
        xmlns:sword="http://purl.org/net/sword/"
        xmlns:dcterms="http://purl.org/dc/terms/"
        xmlns:tal="http://xml.zope.org/namespaces/tal"
-       tal:define="context nocall:view/context;
-                   information view/information">
+       tal:define="information view/information">
 
     <link rel="edit" href="edit-iri"
           tal:attributes="href string:${context/absolute_url}/sword/edit" />
