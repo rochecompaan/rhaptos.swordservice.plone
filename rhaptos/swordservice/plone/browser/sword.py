@@ -16,6 +16,8 @@ from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.interfaces import IFolderish
 
+from rhaptos.atompub.plone.browser.atompub import PloneFolderAtomPubAdapter
+
 from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
@@ -151,49 +153,13 @@ class DepositReceiptAdapter(object):
     def __call__(self, swordview):
         return swordview.depositreceipt
 
-class PloneFolderSwordAdapter(object):
-    """ Adapts a context to an ISWORDContentUploadAdapter. An
-        ISWORDContentUploadAdapter contains the functionality to actually
-        create the content. It returns the created object. Write your own if
-        you don't want the default behaviour, which is very webdav like, it
-        just creates a file corresponding to whatever you uploaded. """
-    adapts(IFolderish, IHTTPRequest)
-
-    def getHeader(self, name, default=None):
-        return getattr(self.request, 'getHeader', self.request.get_header)(
-            name, default)
+class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
+    """ Adapts a context to an ISWORDContentAdapter. An ISWORDContentAdapter
+        contains the functionality to actually create the content. Write
+        your own if you don't want the default behaviour, which is very
+        webdav like, it just creates a file corresponding to whatever you
+        uploaded. 
         
-    def __init__(self, context, request):
-        self.context = context
-        self.request = request
-
-    def __call__(self):
-        """ Calling the adapter does the actual work of importing the content.
-        """
-        content_type = self.getHeader('content-type')
-        disposition = self.getHeader('content-disposition')
-        filename = None
-        if disposition is not None:
-            try:
-                filename = [x for x in disposition.split(';') \
-                    if x.strip().startswith('filename=')][0][10:]
-            except IndexError:
-                pass
-
-        # If no filename, make one up, otherwise just make sure its http safe
-        if filename is None:
-            safe_filename = self.context.generateUniqueId(
-                type_name=content_type.replace('/', '_'))
-        else:
-            safe_filename = getToolByName(self.context,
-                'plone_utils').normalizeString(filename)
-
-        NullResource(self.context, safe_filename, self.request).__of__(
-            self.context).PUT(self.request, self.request.response)
-
-        # Look it up and finish up, then return it.
-        ob = self.context._getOb(safe_filename)
-        ob.PUT(self.request, self.request.response)
-        ob.setTitle(filename)
-        ob.reindexObject(idxs='Title')
-        return ob
+        This one needs to handle multipart requests too.
+    """
+    adapts(IFolderish, IHTTPRequest)
