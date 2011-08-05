@@ -25,6 +25,7 @@ setup(name='rhaptos.swordservice.plone',
       install_requires=[
           'setuptools',
           # -*- Extra requirements: -*-
+          'rhaptos.atompub.plone',
       ],
       entry_points="""
       # -*- Entry points: -*-
