@@ -12,13 +12,13 @@
 
     <browser:page
         for="Products.CMFCore.interfaces.IFolderish"
-        name="service-document"
+        name="servicedocument"
         class=".sword.ServiceDocument"
         template="servicedocument.pt"
         permission="zope2.View" />
 
     <browser:page
-        for="*"
+        for="Products.ATContentTypes.interface.file.IATFile"
         name="edit"
         class=".sword.DepositReceipt"
         template="depositreceipt.pt"
