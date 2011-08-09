@@ -89,23 +89,17 @@ class SWORDService(BrowserView):
 
             Basically this gives us nice RESTful URLs eg:
 
-                <Plone Site>/sword/service-document
+                <Plone Site>/sword/servicedocument
                 <Folder>/sword
         """
-        adapter = {
-            'service-document': ISWORDServiceDocument,
+        ifaces = {
+            'servicedocument': ISWORDServiceDocument,
             'edit': ISWORDDepositReceipt
-        }.get(name, None)
-        if adapter is not None:
-            return adapter(self.context, self.request)()
+        }
+        iface = ifaces.get(name, None)
+        if iface is not None:
+            return getMultiAdapter((self.context, self.request), iface)()
         return getattr(self, name)
-
-    def getPhysicalPath(self):
-        """ The publisher calls this while recording metadata. More
-            specifically, the page template's getPhysicalPath method is called
-            by the publisher, and it calls us. """
-        return self.context.getPhysicalPath() + (self.__name__,)
-
 
 class ServiceDocument(BrowserView):
     """ Adapts a context and renders a service document for it.
@@ -121,6 +115,13 @@ class ServiceDocument(BrowserView):
     def portal_title(self):
         """ Return the portal title. """
         return getToolByName(self.context, 'portal_url').getPortalObject().Title()
+
+
+    def getPhysicalPath(self):
+        """ The publisher calls this while recording metadata. More
+            specifically, the page template's getPhysicalPath method is called
+            by the publisher, and it calls us. """
+        return self.context.getPhysicalPath() + (self.__name__,)
 
 
 class DepositReceipt(BrowserView):
@@ -143,6 +144,12 @@ class DepositReceipt(BrowserView):
         if adapter is not None:
             return adapter.information()
         return {}
+
+    def getPhysicalPath(self):
+        """ The publisher calls this while recording metadata. More
+            specifically, the page template's getPhysicalPath method is called
+            by the publisher, and it calls us. """
+        return self.context.getPhysicalPath() + (self.__name__,)
 
 
 class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
