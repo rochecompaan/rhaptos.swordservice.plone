@@ -18,7 +18,7 @@
         permission="zope2.View" />
 
     <browser:page
-        for="Products.ATContentTypes.interface.file.IATFile"
+        for="*"
         name="edit"
         class=".sword.DepositReceipt"
         template="depositreceipt.pt"

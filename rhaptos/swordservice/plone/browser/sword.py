@@ -113,10 +113,6 @@ class ServiceDocument(BrowserView):
     implements(ISWORDServiceDocument)
 
 
-    def __init__(self):
-        return self.index()
-
-
     def collections(self):
         """Return all folders we have access to as collection targets"""
         pc = getToolByName(self.context, "portal_catalog")
@@ -132,10 +128,6 @@ class DepositReceipt(BrowserView):
         only be possible for uploaded content. This class is therefore bound
         to ATFile (for the default plone installation) in zcml. """
     implements(ISWORDDepositReceipt)
-
-
-    def __init__(self):
-        return self.index()
 
 
     def information(self, ob=None):
