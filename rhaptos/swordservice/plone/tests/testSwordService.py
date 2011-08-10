@@ -1,3 +1,7 @@
+import os, sys
+if __name__ == '__main__':
+    execfile(os.path.join(sys.path[0], 'framework.py'))
+
 from StringIO import StringIO
 from base64 import decodestring
 from zope.publisher.interfaces.http import IHTTPRequest
@@ -12,6 +16,7 @@ from Products.Five import BrowserView
 from Products.PloneTestCase import PloneTestCase
 
 from rhaptos.swordservice.plone.browser.sword import ISWORDService
+from rhaptos.swordservice.plone.browser.sword import ServiceDocument
 
 PloneTestCase.setupPloneSite()
 
@@ -44,7 +49,8 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         assert isinstance(view, BrowserView)
 
         # Test service-document
-        assert bool(view.publishTraverse(request, 'service-document')())
+        view = self.portal.restrictedTraverse('sword/servicedocument')
+        assert isinstance(view, ServiceDocument)
 
         # Upload a zip file
         env = {
