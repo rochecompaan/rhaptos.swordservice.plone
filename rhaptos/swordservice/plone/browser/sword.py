@@ -83,7 +83,8 @@ class SWORDService(BrowserView):
         self.request.response.setStatus(201)
 
         # Return the optional deposit receipt
-        return ob.unrestrictedTraverse('sword/edit')(upload=True)
+        view = ob.unrestrictedTraverse('sword/edit')
+        return view(upload=True)
 
     def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
@@ -115,8 +116,8 @@ class ServiceDocument(BrowserView):
 
     servicedocument = ViewPageTemplateFile('servicedocument.pt')
 
-    def __call__(self, context):
-        return self.servicedocument
+    def __call__(self):
+        return self.servicedocument()
 
     def collections(self):
         """Return all folders we have access to as collection targets"""
@@ -142,6 +143,9 @@ class DepositReceipt(BrowserView):
 
     depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
 
+    def __call__(self, upload=False):
+        return self.depositreceipt(upload=upload)
+
     def information(self, ob=None):
         """ Return additional or overriding information about our context. By
             default there is no extra information, but if you register an
@@ -155,6 +159,12 @@ class DepositReceipt(BrowserView):
         if adapter is not None:
             return adapter.information()
         return {}
+
+    def getPhysicalPath(self):
+        """ The publisher calls this while recording metadata. More
+            specifically, the page template's getPhysicalPath method is called
+            by the publisher, and it calls us. """
+        return self.context.getPhysicalPath() + (self.__name__,)
 
 
 class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):

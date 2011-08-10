@@ -3,7 +3,7 @@
        xmlns:sword="http://purl.org/net/sword/"
        xmlns:dcterms="http://purl.org/dc/terms/"
        xmlns:tal="http://xml.zope.org/namespaces/tal"
-       tal:define="information view/information">
+       tal:define="context nocall:view/context">
 
     <link rel="edit" href="edit-iri"
           tal:attributes="href string:${context/absolute_url}/sword/edit" />
@@ -25,8 +25,8 @@
     <sword:treatment tal:content="string:Stored as ${context/id}">Stored</sword:treatment>
     <title tal:content="context/Title">My Deposit</title>
     <id tal:content="context/absolute_url">1234</id>
-    <updated tal:content="information/updated|context/modified">2008-08-18T14:27:08Z</updated>
-    <author><name tal:content="information/author|context/Creator">jbloggs</name></author>
+    <updated tal:content="context/modified">2008-08-18T14:27:08Z</updated>
+    <author><name tal:content="context/Creator">jbloggs</name></author>
     <dcterms:available tal:content="context/getEffectiveDate">Date Available</dcterms:available>
     <dcterms:description tal:content="context/Description">Description</dcterms:description>
     <dcterms:title tal:content="context/Title">Title</dcterms:title>
