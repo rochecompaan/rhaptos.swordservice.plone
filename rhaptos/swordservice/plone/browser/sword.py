@@ -83,6 +83,7 @@ class SWORDService(BrowserView):
         self.request.response.setStatus(201)
 
         # Return the optional deposit receipt
+        ob = ob.__of__(self.context)
         view = ob.unrestrictedTraverse('sword/edit')
         return view(upload=True)
 
