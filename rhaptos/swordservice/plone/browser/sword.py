@@ -129,12 +129,6 @@ class ServiceDocument(BrowserView):
         """ Return the portal title. """
         return getToolByName(self.context, 'portal_url').getPortalObject().Title()
 
-    def getPhysicalPath(self):
-        """ The publisher calls this while recording metadata. More
-            specifically, the page template's getPhysicalPath method is called
-            by the publisher, and it calls us. """
-        return self.context.getPhysicalPath() + (self.__name__,)
-
 
 class DepositReceipt(BrowserView):
     """ Adapts a context and renders an edit document for it. This should
@@ -146,27 +140,6 @@ class DepositReceipt(BrowserView):
 
     def __call__(self, upload=False):
         return self.depositreceipt(upload=upload)
-
-    def information(self, ob=None):
-        """ Return additional or overriding information about our context. By
-            default there is no extra information, but if you register an
-            adapter for your context that provides us with a
-            ISWORDContentAdapter, you can generate or override that extra
-            information by implementing a method named information that
-            returns a dictionary.  Valid keys are author and updated. """
-        if ob is None:
-            ob = self.context
-        adapter = queryAdapter(ob, ISWORDContentAdapter)
-        if adapter is not None:
-            return adapter.information()
-        return {}
-
-    def getPhysicalPath(self):
-        """ The publisher calls this while recording metadata. More
-            specifically, the page template's getPhysicalPath method is called
-            by the publisher, and it calls us. """
-        return self.context.getPhysicalPath() + (self.__name__,)
-
 
 class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
     """ Adapts a context to an ISWORDContentAdapter. An ISWORDContentAdapter
