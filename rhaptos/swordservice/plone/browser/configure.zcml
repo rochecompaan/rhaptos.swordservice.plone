@@ -10,20 +10,6 @@
         class=".sword.SWORDService"
         permission="zope2.View" />
 
-    <browser:page
-        for="Products.CMFCore.interfaces.IFolderish"
-        name="servicedocument"
-        class=".sword.ServiceDocument"
-        template="servicedocument.pt"
-        permission="zope2.View" />
-
-    <browser:page
-        for="Products.ATContentTypes.interface.file.IATFile"
-        name="edit"
-        class=".sword.DepositReceipt"
-        template="depositreceipt.pt"
-        permission="zope2.View" />
-
     <!-- This adapts folderish objects into sword collections. Override this
          for your own types -->
     <adapter
@@ -31,5 +17,18 @@
              zope.publisher.interfaces.http.IHTTPRequest"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDContentUploadAdapter"
         factory=".sword.PloneFolderSwordAdapter" />
+
+    <!-- Adapters for ISWORDDepositReceipt and ISWORDServiceDocument. Folderish
+         objects are collections and have a service document, Files are
+         uploaded content and have an edit-iri -->
+    <adapter
+        for="Products.CMFCore.interfaces.IFolderish"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDServiceDocument"
+        factory=".sword.ServiceDocumentAdapter" />
+
+    <adapter
+        for="Products.ATContentTypes.interface.file.IATFile"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDDepositReceipt"
+        factory=".sword.DepositReceiptAdapter" />
 
 </configure>

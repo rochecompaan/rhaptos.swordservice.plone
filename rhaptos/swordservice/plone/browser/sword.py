@@ -62,6 +62,8 @@ class SWORDService(BrowserView):
 
     implements(ISWORDService, IPublishTraverse)
 
+    servicedocument = ViewPageTemplateFile('servicedocument.pt')
+    depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
     errordocument = ViewPageTemplateFile('errordocument.pt')
 
     @show_error_document
@@ -82,6 +84,29 @@ class SWORDService(BrowserView):
         # Return the optional deposit receipt
         return ob.unrestrictedTraverse('sword/edit')(upload=True)
 
+    def collections(self):
+        """Return all folders we have access to as collection targets"""
+        pc = getToolByName(self.context, "portal_catalog")
+        return pc(portal_type='Folder', allowedRolesAndUsers=['contributor'])
+
+    def portal_title(self):
+        """ Return the portal title. """
+        return getToolByName(self.context, 'portal_url').getPortalObject().Title()
+
+    def information(self, ob=None):
+        """ Return additional or overriding information about our context. By
+            default there is no extra information, but if you register an
+            adapter for your context that provides us with a
+            ISWORDContentAdapter, you can generate or override that extra
+            information by implementing a method named information that
+            returns a dictionary.  Valid keys are author and updated. """
+        if ob is None:
+            ob = self.context
+        adapter = queryAdapter(ob, ISWORDContentAdapter)
+        if adapter is not None:
+            return adapter.information()
+        return {}
+
     def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
             of "sword" as a namespace in our path and use the sub path to
@@ -98,24 +123,8 @@ class SWORDService(BrowserView):
         }
         iface = ifaces.get(name, None)
         if iface is not None:
-            return getMultiAdapter((self.context, self.request), iface)()
+            return iface(self.context)(self)
         return getattr(self, name)
-
-class ServiceDocument(BrowserView):
-    """ Adapts a context and renders a service document for it.
-    """
-    implements(ISWORDServiceDocument)
-
-
-    def collections(self):
-        """Return all folders we have access to as collection targets"""
-        pc = getToolByName(self.context, "portal_catalog")
-        return pc(portal_type='Folder', allowedRolesAndUsers=['contributor'])
-
-    def portal_title(self):
-        """ Return the portal title. """
-        return getToolByName(self.context, 'portal_url').getPortalObject().Title()
-
 
     def getPhysicalPath(self):
         """ The publisher calls this while recording metadata. More
@@ -124,32 +133,30 @@ class ServiceDocument(BrowserView):
         return self.context.getPhysicalPath() + (self.__name__,)
 
 
-class DepositReceipt(BrowserView):
+class ServiceDocumentAdapter(object):
+    """ Adapts a context and renders a service document for it. The real
+        magic is in the zcml, where this class is set as the factory that
+        adapts folderish items into sword collections. """
+    implements(ISWORDServiceDocument)
+
+    def __init__(self, context):
+        self.context = context
+
+    def __call__(self, swordview):
+        return swordview.servicedocument
+
+
+class DepositReceiptAdapter(object):
     """ Adapts a context and renders an edit document for it. This should
         only be possible for uploaded content. This class is therefore bound
         to ATFile (for the default plone installation) in zcml. """
     implements(ISWORDDepositReceipt)
 
+    def __init__(self, context):
+        self.context = context
 
-    def information(self, ob=None):
-        """ Return additional or overriding information about our context. By
-            default there is no extra information, but if you register an
-            adapter for your context that provides us with a
-            ISWORDContentAdapter, you can generate or override that extra
-            information by implementing a method named information that
-            returns a dictionary.  Valid keys are author and updated. """
-        if ob is None:
-            ob = self.context
-        adapter = queryAdapter(ob, ISWORDContentAdapter)
-        if adapter is not None:
-            return adapter.information()
-        return {}
-
-    def getPhysicalPath(self):
-        """ The publisher calls this while recording metadata. More
-            specifically, the page template's getPhysicalPath method is called
-            by the publisher, and it calls us. """
-        return self.context.getPhysicalPath() + (self.__name__,)
+    def __call__(self, swordview):
+        return swordview.depositreceipt
 
 
 class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
