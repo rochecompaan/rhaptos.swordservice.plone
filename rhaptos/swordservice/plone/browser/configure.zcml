@@ -22,13 +22,14 @@
          objects are collections and have a service document, Files are
          uploaded content and have an edit-iri -->
     <adapter
-        for="Products.CMFCore.interfaces.IFolderish"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot
+             zope.publisher.interfaces.http.IHTTPRequest"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDServiceDocument"
-        factory=".sword.ServiceDocumentAdapter" />
+        factory=".sword.ServiceDocument" />
 
     <adapter
         for="Products.ATContentTypes.interface.file.IATFile"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDDepositReceipt"
-        factory=".sword.DepositReceiptAdapter" />
+        factory=".sword.DepositReceipt" />
 
 </configure>
