@@ -28,7 +28,8 @@
         factory=".sword.ServiceDocument" />
 
     <adapter
-        for="Products.ATContentTypes.interface.file.IATFile"
+        for="Products.ATContentTypes.interface.file.IATFile
+             zope.publisher.interfaces.http.IHTTPRequest"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDDepositReceipt"
         factory=".sword.DepositReceipt" />
 
