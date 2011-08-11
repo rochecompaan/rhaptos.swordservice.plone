@@ -13,5 +13,5 @@ class ISWORDServiceDocument(Interface):
         document. """
 
 class ISWORDDepositReceipt(Interface):
-    """ Marker interface for contant that can be adapted to show an edit
+    """ Marker interface for content that can be adapted to show an edit
         document. """
