@@ -113,6 +113,7 @@ class ServiceDocument(BrowserView):
     """ Adapts a context and renders a service document for it. The real
         magic is in the zcml, where this class is set as the factory that
         adapts folderish items into sword collections. """
+    __name__ = "servicedocument"
     implements(ISWORDServiceDocument)
 
     servicedocument = ViewPageTemplateFile('servicedocument.pt')
@@ -134,6 +135,7 @@ class DepositReceipt(BrowserView):
     """ Adapts a context and renders an edit document for it. This should
         only be possible for uploaded content. This class is therefore bound
         to ATFile (for the default plone installation) in zcml. """
+    __name__ = "edit"
     implements(ISWORDDepositReceipt)
 
     depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
