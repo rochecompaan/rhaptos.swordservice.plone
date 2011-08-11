@@ -48,9 +48,13 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         view = self.portal.restrictedTraverse('sword')
         assert isinstance(view, BrowserView)
 
-        # Test service-document
+        # Test servicedocument
         view = self.portal.restrictedTraverse('sword/servicedocument')
         assert isinstance(view, ServiceDocument)
+
+        # Test that we can call the servicedocument view and that it returns
+        # something
+        assert bool(view())
 
         # Upload a zip file
         env = {
