@@ -2,6 +2,7 @@ import sys
 import traceback
 import zipfile
 from cStringIO import StringIO
+from email import message_from_file
 import transaction
 
 from zope.interface import Interface, implements
@@ -160,8 +161,32 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
             therefore implemented in this package. """
 
         if content_type.startswith('multipart/'):
-            # do our thing
-            pass
+            request.stdin.seek(0)
+            message = message_from_file(request.stdin)
+
+            # A multipart post has two parts, the first is the atom part, the
+            # second is a zipfile. The spec requires that these be named atom
+            # and payload. So here goes...
+            atom, payload = message.get_payload()
+
+            # We'll use the atom part to obtain the right content type
+            registry = getToolByName(context, 'content_type_registry')
+            typeObjectName = registry.findTypeName(name, atom.get_content_type(), atom)
+            context.invokeFactory(typeObjectName, name)
+            return aq_base(context._getOb(name))
         else:
             return super(PloneFolderSwordAdapter, self).createObject(
                 context, name, content_type, request)
+
+    def updateObject(self, obj, filename, request, response, content_type):
+        """ If the content_type is multipart/related, then this is
+            a multipart sword deposit. This complements the above. """
+        if content_type.startswith('multipart/'):
+            request.stdin.seek(0)
+            message = message_from_file(request.stdin)
+            atom, payload = message.get_payload()
+            # TODO populate obj with metadata from atom and payload from
+            # payload, then return it
+        else:
+            return super(PloneFolderSwordAdapter, self).updateObject(
+                obj, filename, request, response, content_type)
