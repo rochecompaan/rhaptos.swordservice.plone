@@ -153,3 +153,15 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
         This one needs to handle multipart requests too.
     """
     adapts(IFolderish, IHTTPRequest)
+
+    def createObject(self, context, name, content_type, body):
+        """ If the content_type is multipart/related, then this is
+            a multipart deposit which is in the sword domain. It is
+            therefore implemented in this package. """
+
+        if content_type.startswith('multipart/'):
+            # do our thing
+            pass
+        else:
+            return super(PloneFolderSwordAdapter, self).createObject(
+                context, name, content_type, body)
