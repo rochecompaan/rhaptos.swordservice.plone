@@ -3,6 +3,8 @@ import traceback
 import zipfile
 from cStringIO import StringIO
 from email import message_from_file
+from xml.dom.minidom import parse
+from base64 import encodestring as b64encode
 import transaction
 
 from zope.interface import Interface, implements
@@ -20,8 +22,10 @@ from Products.Five import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.interfaces import IFolderish
+from Products.Archetypes.Marshall import formatRFC822Headers
 
 from rhaptos.atompub.plone.browser.atompub import PloneFolderAtomPubAdapter
+from rhaptos.atompub.plone.browser.atompub import METADATA_MAPPING
 
 from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
@@ -178,15 +182,46 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
             return super(PloneFolderSwordAdapter, self).createObject(
                 context, name, content_type, request)
 
+    def _updateRequest(self, request):
+        """ Similar to the same method in atompub. We change the request so
+            that the metadata is in the right place, then append the content.
+            This is only called for multipart posts. """
+
+        # This seems to be the safest place to get hold of the actual message
+        # body.
+        request.stdin.seek(0)
+        message = message_from_file(request.stdin)
+        atom, payload = message.get_payload()
+
+        # Call get_payload with decode=True, so it can handle the transfer
+        # encoding for us, if any.
+        dom = parse(StringIO(atom.get_payload(decode=True)))
+
+        # Get the payload
+        content = payload.get_payload(decode=True)
+
+        # Assemble a new request
+        title = self.getValueFromDOM('title', dom)
+        request['Title'] = title
+        headers = self.getHeaders(dom, METADATA_MAPPING)
+        headers.append(('Content-Transfer-Encoding', 'base64'))
+        header = formatRFC822Headers(headers)
+
+        # make sure content is not None
+        data = '%s\n\n%s' % (header, b64encode(content))
+        request['Content-Length'] = len(data)
+        request['BODYFILE'] = StringIO(data)
+        return request
+
     def updateObject(self, obj, filename, request, response, content_type):
         """ If the content_type is multipart/related, then this is
             a multipart sword deposit. This complements the above. """
         if content_type.startswith('multipart/'):
-            request.stdin.seek(0)
-            message = message_from_file(request.stdin)
-            atom, payload = message.get_payload()
-            # TODO populate obj with metadata from atom and payload from
-            # payload, then return it
+            request = self._updateRequest(request)
+            obj.PUT(request, response)
+            obj.setTitle(request.get('Title', filename))
+            obj.reindexObject(idxs='Title')
+            return obj
         else:
             return super(PloneFolderSwordAdapter, self).updateObject(
                 obj, filename, request, response, content_type)
