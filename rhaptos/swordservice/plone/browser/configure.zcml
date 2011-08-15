@@ -33,4 +33,10 @@
         provides="rhaptos.swordservice.plone.interfaces.ISWORDDepositReceipt"
         factory=".sword.DepositReceipt" />
 
+    <adapter
+        for="Products.ATContentTypes.interface.file.IATFile
+             zope.publisher.interfaces.http.IHTTPRequest"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDRetrieveContentAdapter"
+        factory=".sword.RetrieveContent" />
+
 </configure>

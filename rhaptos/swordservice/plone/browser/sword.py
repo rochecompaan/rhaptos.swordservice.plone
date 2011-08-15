@@ -22,6 +22,7 @@ from Products.Five import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.interfaces import IFolderish
+from Products.ATContentTypes.interface.file import IATFile
 from Products.Archetypes.Marshall import formatRFC822Headers
 
 from rhaptos.atompub.plone.browser.atompub import PloneFolderAtomPubAdapter
@@ -31,6 +32,7 @@ from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
 from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
+from rhaptos.swordservice.plone.interfaces import ISWORDRetrieveContentAdapter
 
 try:
     from zope.contenttype import guess_content_type
@@ -99,7 +101,9 @@ class SWORDService(BrowserView):
 
     def _handleGet(self):
         """ Get files as sword packages """
-        return None
+        adapter = getMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDRetrieveContentAdapter)
+        return adapter()
 
     def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
@@ -191,7 +195,7 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
             return super(PloneFolderSwordAdapter, self).createObject(
                 context, name, content_type, request)
 
-    def _updateRequest(self, request):
+    def _updateRequest(self, request, content_type):
         """ Similar to the same method in atompub. We change the request so
             that the metadata is in the right place, then append the content.
             This is only called for multipart posts. """
@@ -226,7 +230,7 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
         """ If the content_type is multipart/related, then this is
             a multipart sword deposit. This complements the above. """
         if content_type.startswith('multipart/'):
-            request = self._updateRequest(request)
+            request = self._updateRequest(request, content_type)
             obj.PUT(request, response)
             obj.setTitle(request.get('Title', filename))
             obj.reindexObject(idxs='Title')
@@ -234,3 +238,24 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
         else:
             return super(PloneFolderSwordAdapter, self).updateObject(
                 obj, filename, request, response, content_type)
+
+
+class RetrieveContent(object):
+    """
+    """
+    adapts(IATFile, IHTTPRequest)
+
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+
+    def __call__(self):
+        data = self.context.getFile().data
+        response = self.request.response
+        filename = self.context.Title()
+        response.setHeader(
+                'CONTENT_DISPOSITION', 'attachment; filename=%s' %filename)
+        response.setHeader('CONTENT_TYPE', 'application/zip')
+        response.setHeader('CONTENT_LENGTH', len(data))
+        response.write(data)

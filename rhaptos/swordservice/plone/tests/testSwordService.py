@@ -41,7 +41,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
     def afterSetup(self):
         pass
 
-    def testSwordService(self):
+    def _testSwordService(self):
         request = self.portal.REQUEST
 
         # Check that 'sword' ends up at a browser view
@@ -76,6 +76,30 @@ class TestSwordService(PloneTestCase.PloneTestCase):
 
         # Test that we can still reach the edit-iri
         assert self.portal.restrictedTraverse('perry-zip/sword/edit')
+
+    def testContentRetrieve(self):
+        id = self.folder.invokeFactory('Folder', 'workspace')
+        workspace = self.folder[id]
+
+        id = workspace.invokeFactory('File', 'content_file')
+        content_file = workspace[id]
+        file = StringIO(ZIPFILE)
+        content_file.setFile(file)
+    
+        env = {
+            'REQUEST_METHOD': 'GET',
+            'SERVER_NAME': 'nohost',
+            'SERVER_PORT': '80'
+        }
+        getresponse = HTTPResponse(stdout=StringIO())
+        getrequest = clone_request(self.app.REQUEST, getresponse, env)
+
+        self.setRoles(('Manager',))
+        adapter = getMultiAdapter(
+            (content_file, getrequest), Interface, 'sword')
+        zipfile = adapter()
+        print zipfile 
+
 
 def test_suite():
     from unittest import TestSuite, makeSuite
