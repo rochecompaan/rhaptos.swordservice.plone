@@ -75,9 +75,14 @@ class SWORDService(BrowserView):
     @show_error_document
     def __call__(self):
         method = self.request.get('REQUEST_METHOD')
-        if method != 'POST':
+        if method == 'POST':
+            return self._handlePost()
+        elif method == 'GET':
+            return self._handleGet()
+        else:
             raise MethodNotAllowed("Method %s not supported" % method)
 
+    def _handlePost(self):
         # Adapt and call
         adapter = getMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
@@ -91,6 +96,10 @@ class SWORDService(BrowserView):
         ob = ob.__of__(self.context)
         view = ob.unrestrictedTraverse('sword/edit')
         return view(upload=True)
+
+    def _handleGet(self):
+        """ Get files as sword packages """
+        return None
 
     def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
