@@ -255,7 +255,6 @@ class RetrieveContent(object):
         response = self.request.response
         filename = self.context.Title()
         response.setHeader(
-                'CONTENT_DISPOSITION', 'attachment; filename=%s' %filename)
-        response.setHeader('CONTENT_TYPE', 'application/zip')
-        response.setHeader('CONTENT_LENGTH', len(data))
-        response.write(data)
+                'Content-disposition', 'attachment; filename=%s' %filename)
+        response.setHeader('Content-type', 'application/zip')
+        return data
