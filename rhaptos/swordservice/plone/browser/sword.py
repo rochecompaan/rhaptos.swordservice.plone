@@ -259,9 +259,4 @@ class RetrieveContent(object):
                 'Content-disposition', 'attachment; filename=%s' %filename)
         response.setHeader('Content-type', 'application/zip')
         response.setHeader("Content-Length", len(data))
-        now = DateTime()
-        response.setHeader('Last-Modified', DateTime.rfc822(now))
-        response.setHeader("Cache-Control", "no-store")
-        response.setHeader("Pragma", "no-cache")
-
         return data
