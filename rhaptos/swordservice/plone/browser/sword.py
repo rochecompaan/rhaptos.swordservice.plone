@@ -261,7 +261,7 @@ class RetrieveContent(object):
         response.setHeader("Content-Length", len(data))
         now = DateTime()
         response.setHeader('Last-Modified', DateTime.rfc822(now))
-        self.request.response.setHeader("Cache-Control", "no-store")
-        self.request.response.setHeader("Pragma", "no-cache")
+        response.setHeader("Cache-Control", "no-store")
+        response.setHeader("Pragma", "no-cache")
 
         return data
