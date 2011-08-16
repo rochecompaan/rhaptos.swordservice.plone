@@ -2,6 +2,7 @@ import sys
 import traceback
 import zipfile
 from cStringIO import StringIO
+from DateTime import DateTime
 from email import message_from_file
 from xml.dom.minidom import parse
 from base64 import encodestring as b64encode
@@ -257,4 +258,10 @@ class RetrieveContent(object):
         response.setHeader(
                 'Content-disposition', 'attachment; filename=%s' %filename)
         response.setHeader('Content-type', 'application/zip')
+        response.setHeader("Content-Length", len(data))
+        now = DateTime()
+        response.setHeader('Last-Modified', DateTime.rfc822(now))
+        self.request.response.setHeader("Cache-Control", "no-store")
+        self.request.response.setHeader("Pragma", "no-cache")
+
         return data
