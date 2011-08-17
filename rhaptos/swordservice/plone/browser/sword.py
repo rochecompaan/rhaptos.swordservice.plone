@@ -270,11 +270,6 @@ class SWORDStatement(BrowserView):
 
     implements(ISWORDStatement)
 
-    errordocument = ViewPageTemplateFile('errordocument.pt')
-
-    def __call__(self):
-        return self.index()
-         
 
     def treatment(self):
         return 'Stored'
