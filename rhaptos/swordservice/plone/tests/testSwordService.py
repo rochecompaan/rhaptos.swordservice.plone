@@ -124,8 +124,10 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         xml = adapter()
         assert "<sword:error" not in xml, xml
 
+        id = self.folder.workspace.objectIds()[0]
+        file = self.folder.workspace[id]
         adapter = getMultiAdapter(
-                (self.folder.workspace, self.portal.REQUEST), Interface, 'statement')
+                (file, self.portal.REQUEST), Interface, 'statement')
         xml = adapter()
         assert "<sword:error" not in xml, xml
 

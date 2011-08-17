@@ -11,7 +11,7 @@
         permission="zope2.View" />
 
     <browser:page
-        for="*"
+        for="Products.ATContentTypes.interface.file.IATFile"
         name="statement"
         class=".sword.SWORDStatement"
         template="statement.pt"
