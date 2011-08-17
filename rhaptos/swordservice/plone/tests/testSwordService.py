@@ -20,6 +20,8 @@ from rhaptos.swordservice.plone.browser.sword import ServiceDocument
 
 PloneTestCase.setupPloneSite()
 
+DIRNAME = os.path.dirname(__file__)
+
 def clone_request(req, response=None, env=None):
     # Return a clone of the current request object.
     environ = req.environ.copy()
@@ -99,6 +101,31 @@ class TestSwordService(PloneTestCase.PloneTestCase):
             (content_file, getrequest), Interface, 'sword')
         zipfile = adapter()
         print zipfile 
+
+    def testSwordServiceStatement(self):
+        self.folder.invokeFactory('Folder', 'workspace')
+        xml = os.path.join(DIRNAME, 'data', 'entry.xml')
+        file = open(xml, 'rb')
+        content = file.read()
+        file.close()
+        env = {
+            'REQUEST_METHOD': 'POST',
+            'CONTENT_LENGTH': len(content),
+            'CONTENT_TYPE': 'application/atom+xml;type=entry',
+            'SERVER_NAME': 'nohost',
+            'SERVER_PORT': '80'
+        }
+        uploadresponse = HTTPResponse(stdout=StringIO())
+        uploadrequest = clone_request(self.app.REQUEST, uploadresponse, env)
+        uploadrequest.set('BODYFILE', StringIO(content))
+        uploadrequest.set('PARENTS', [self.folder.workspace])
+        adapter = getMultiAdapter(
+                (self.folder.workspace, uploadrequest), Interface, 'atompub')
+        xml = adapter()
+        assert "<sword:error" not in xml, xml
+
+        adapter = getMultiAdapter(
+                (self.folder.workspace, self.portal.REQUEST), Interface, 'statement')
 
 
 def test_suite():
