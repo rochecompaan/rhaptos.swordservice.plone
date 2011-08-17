@@ -24,15 +24,22 @@
 
     <link tal:repeat="item options/derived|nothing"
           rel="http://purl.org.net/sword/terms/derivedResource"
-          href="" 
+          href="iri" 
           tal:attributes="href item/absolute_url" />
     
     <sword:state href="http://sword/state"
-          tal:attributes="href string:${context/absolute_url}/view">
-        <sword:stateDescription>
+          tal:attributes="href string:${context/absolute_url}">
+        <sword:stateDescription tal:content="view/state_description">
             The item has passed through the workflow and is now archived
         </sword:stateDescription>
     </sword:state>
+
+    <sword:originalDeposit href="http://location/of/deposit"
+        tal:attributes="href context/absolute_url">
+        <sword:packaging tal:content="view/packaging">
+            application/xhtml+xml
+        </sword:packaging>
+    </sword:originalDeposit>
 
     <sword:treatment tal:content="view/treatment">Stored</sword:treatment>
     <title tal:content="context/Title">package title</title>

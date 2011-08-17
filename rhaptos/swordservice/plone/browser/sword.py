@@ -281,4 +281,21 @@ class SWORDStatement(BrowserView):
     
 
     def state_description(self):
-        return "The item has been stored and archived."
+        obj = self.context.aq_inner
+        state = self.workflow_state(obj)
+        return "The item state is:%s" %state
+
+    
+    def workflow_state(self, obj):
+        state = 'private'
+        wft = getToolByName(obj, 'portal_workflow')
+        if wft.getChainFor(obj):
+            state = wft.getInfoFor(obj, 'review_state')
+        return state
+
+    
+    def packaging(self):
+        """ This can be elaborated to return the actual packacking.
+            At the moment we put simple xhtml in the file.
+        """
+        return 'application/xhtml+xml'
