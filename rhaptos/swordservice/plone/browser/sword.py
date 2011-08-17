@@ -275,3 +275,10 @@ class SWORDStatement(BrowserView):
     def __call__(self):
         return self.index()
          
+
+    def treatment(self):
+        return 'Stored'
+    
+
+    def state_description(self):
+        return "The item has been stored and archived."
