@@ -10,6 +10,13 @@
         class=".sword.SWORDService"
         permission="zope2.View" />
 
+    <browser:page
+        for="*"
+        name="statement"
+        class=".sword.SWORDStatement"
+        template="statement.pt"
+        permission="zope2.View" />
+
     <!-- This adapts folderish objects into sword collections. Override this
          for your own types -->
     <adapter

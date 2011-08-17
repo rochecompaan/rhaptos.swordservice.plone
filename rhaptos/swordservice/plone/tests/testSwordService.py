@@ -126,6 +126,8 @@ class TestSwordService(PloneTestCase.PloneTestCase):
 
         adapter = getMultiAdapter(
                 (self.folder.workspace, self.portal.REQUEST), Interface, 'statement')
+        xml = adapter()
+        assert "<sword:error" not in xml, xml
 
 
 def test_suite():

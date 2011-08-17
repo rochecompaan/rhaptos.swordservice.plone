@@ -45,6 +45,10 @@ class ISWORDService(Interface):
     """ Marker interface for SWORD service """
 
 
+class ISWORDStatement(Interface):
+    """ Marker interface for SWORD service """
+
+
 def show_error_document(func):
     """ This is a decorator to be applied on the methods in the SwordService
         class. It checks for exceptions, and renders an error document
@@ -260,3 +264,14 @@ class RetrieveContent(object):
         response.setHeader('Content-type', 'application/zip')
         response.setHeader("Content-Length", len(data))
         return data
+
+
+class SWORDStatement(BrowserView):
+
+    implements(ISWORDStatement)
+
+    errordocument = ViewPageTemplateFile('errordocument.pt')
+
+    def __call__(self):
+        return self.index()
+         
