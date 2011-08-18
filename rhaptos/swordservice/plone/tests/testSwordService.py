@@ -43,7 +43,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
     def afterSetup(self):
         pass
 
-    def _testSwordService(self):
+    def testSwordService(self):
         request = self.portal.REQUEST
 
         # Check that 'sword' ends up at a browser view
@@ -51,7 +51,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         assert isinstance(view, BrowserView)
 
         # Test service-document
-        view = self.portal.restrictedTraverse('sword/servicedocument')
+        view = self.portal.unrestrictedTraverse('sword/servicedocument')
         assert isinstance(view, ServiceDocument)
         assert "<sword:error" not in view()
 
@@ -81,7 +81,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         assert "<sword:error" not in xml, xml
 
         # Test that we can still reach the edit-iri
-        assert self.portal.restrictedTraverse('perry-zip/sword/edit')
+        assert self.folder.unrestrictedTraverse('perry-zip/sword/edit')
 
     def testContentRetrieve(self):
         id = self.folder.invokeFactory('Folder', 'workspace')
