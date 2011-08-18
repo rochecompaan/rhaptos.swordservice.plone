@@ -50,17 +50,17 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         view = self.portal.restrictedTraverse('sword')
         assert isinstance(view, BrowserView)
 
-        # Test servicedocument
+        # Test service-document
         view = self.portal.restrictedTraverse('sword/servicedocument')
         assert isinstance(view, ServiceDocument)
-
-        # Test that we can call the servicedocument view and that it returns
-        # something
-        assert bool(view())
+        assert "<sword:error" not in view()
 
         # Upload a zip file
+        zipfilename = os.path.join(DIRNAME, 'data', 'perry.zip')
+        zipfile = open(zipfilename, 'r')
         env = {
             'CONTENT_TYPE': 'application/zip',
+            'CONTENT_LENGTH': os.path.getsize(zipfilename),
             'CONTENT_DISPOSITION': 'attachment; filename=perry.zip',
             'REQUEST_METHOD': 'POST',
             'SERVER_NAME': 'nohost',
@@ -68,13 +68,17 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         }
         uploadresponse = HTTPResponse(stdout=StringIO())
         uploadrequest = clone_request(self.app.REQUEST, uploadresponse, env)
-        uploadrequest.set('BODYFILE', StringIO(decodestring(ZIPFILE)))
+        uploadrequest.set('BODYFILE', zipfile)
+        # Fake PARENTS
+        uploadrequest.set('PARENTS', [self.folder])
 
         # Call the sword view on this request to perform the upload
         self.setRoles(('Manager',))
         xml = getMultiAdapter(
-            (self.portal, uploadrequest), Interface, 'sword')()
+            (self.folder, uploadrequest), Interface, 'sword')()
+        zipfile.close()
         assert bool(xml), "Upload view does not return a result"
+        assert "<sword:error" not in xml, xml
 
         # Test that we can still reach the edit-iri
         assert self.portal.restrictedTraverse('perry-zip/sword/edit')
@@ -85,7 +89,8 @@ class TestSwordService(PloneTestCase.PloneTestCase):
 
         id = workspace.invokeFactory('File', 'content_file')
         content_file = workspace[id]
-        file = StringIO(ZIPFILE)
+        zipfilename = os.path.join(DIRNAME, 'data', 'perry.zip')
+        file = open(zipfilename, 'r')
         content_file.setFile(file)
     
         env = {
@@ -100,7 +105,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         adapter = getMultiAdapter(
             (content_file, getrequest), Interface, 'sword')
         zipfile = adapter()
-        print zipfile 
+        file.close()
 
     def testSwordServiceStatement(self):
         self.folder.invokeFactory('Folder', 'workspace')
@@ -137,30 +142,3 @@ def test_suite():
     suite = TestSuite()
     suite.addTest(makeSuite(TestSwordService))
     return suite
-
-# base64 representation of a small test zip file
-ZIPFILE="""\
-UEsDBAoAAAAAAOKC/T4AAAAAAAAAAAAAAAACABwAeC9VVAkAA0jCMk5OwjJOdXgLAAEE6AMAAATo
-AwAAUEsDBAoAAAAAAOKC/T4AAAAAAAAAAAAAAAAEABwAeC95L1VUCQADSMIyTk7CMk51eAsAAQTo
-AwAABOgDAABQSwMECgAAAAAA6IL9PgAAAAAAAAAAAAAAAAYAHAB4L3kvei9VVAkAA1PCMk52wjJO
-dXgLAAEE6AMAAAToAwAAUEsDBAoAAAAAAOiC/T4AAAAAAAAAAAAAAAAHABwAeC95L3ovYVVUCQAD
-U8IyTlPCMk51eAsAAQToAwAABOgDAABQSwMECgAAAAAA6IL9PgAAAAAAAAAAAAAAAAcAHAB4L3kv
-ei9mVVQJAANTwjJOU8IyTnV4CwABBOgDAAAE6AMAAFBLAwQKAAAAAADogv0+AAAAAAAAAAAAAAAA
-BwAcAHgveS96L2NVVAkAA1PCMk5TwjJOdXgLAAEE6AMAAAToAwAAUEsDBAoAAAAAAOiC/T4AAAAA
-AAAAAAAAAAAHABwAeC95L3ovZFVUCQADU8IyTlPCMk51eAsAAQToAwAABOgDAABQSwMECgAAAAAA
-6IL9PgAAAAAAAAAAAAAAAAcAHAB4L3kvei9iVVQJAANTwjJOU8IyTnV4CwABBOgDAAAE6AMAAFBL
-AwQKAAAAAADogv0+AAAAAAAAAAAAAAAABwAcAHgveS96L2VVVAkAA1PCMk5TwjJOdXgLAAEE6AMA
-AAToAwAAUEsBAh4DCgAAAAAA4oL9PgAAAAAAAAAAAAAAAAIAGAAAAAAAAAAQAO1BAAAAAHgvVVQF
-AANIwjJOdXgLAAEE6AMAAAToAwAAUEsBAh4DCgAAAAAA4oL9PgAAAAAAAAAAAAAAAAQAGAAAAAAA
-AAAQAO1BPAAAAHgveS9VVAUAA0jCMk51eAsAAQToAwAABOgDAABQSwECHgMKAAAAAADogv0+AAAA
-AAAAAAAAAAAABgAYAAAAAAAAABAA7UF6AAAAeC95L3ovVVQFAANTwjJOdXgLAAEE6AMAAAToAwAA
-UEsBAh4DCgAAAAAA6IL9PgAAAAAAAAAAAAAAAAcAGAAAAAAAAAAAAKSBugAAAHgveS96L2FVVAUA
-A1PCMk51eAsAAQToAwAABOgDAABQSwECHgMKAAAAAADogv0+AAAAAAAAAAAAAAAABwAYAAAAAAAA
-AAAApIH7AAAAeC95L3ovZlVUBQADU8IyTnV4CwABBOgDAAAE6AMAAFBLAQIeAwoAAAAAAOiC/T4A
-AAAAAAAAAAAAAAAHABgAAAAAAAAAAACkgTwBAAB4L3kvei9jVVQFAANTwjJOdXgLAAEE6AMAAATo
-AwAAUEsBAh4DCgAAAAAA6IL9PgAAAAAAAAAAAAAAAAcAGAAAAAAAAAAAAKSBfQEAAHgveS96L2RV
-VAUAA1PCMk51eAsAAQToAwAABOgDAABQSwECHgMKAAAAAADogv0+AAAAAAAAAAAAAAAABwAYAAAA
-AAAAAAAApIG+AQAAeC95L3ovYlVUBQADU8IyTnV4CwABBOgDAAAE6AMAAFBLAQIeAwoAAAAAAOiC
-/T4AAAAAAAAAAAAAAAAHABgAAAAAAAAAAACkgf8BAAB4L3kvei9lVVQFAANTwjJOdXgLAAEE6AMA
-AAToAwAAUEsFBgAAAAAJAAkArAIAAEACAAAAAA==\
-"""
