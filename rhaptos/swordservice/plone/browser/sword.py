@@ -14,7 +14,7 @@ from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
 
 from AccessControl import ClassSecurityInfo
-from Acquisition import aq_inner, aq_base
+from Acquisition import aq_inner
 from zExceptions import Unauthorized, MethodNotAllowed, NotFound
 from webdav.NullResource import NullResource
 
@@ -195,7 +195,7 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
             registry = getToolByName(context, 'content_type_registry')
             typeObjectName = registry.findTypeName(name, atom.get_content_type(), atom)
             context.invokeFactory(typeObjectName, name)
-            return aq_base(context._getOb(name))
+            return context._getOb(name)
         else:
             return super(PloneFolderSwordAdapter, self).createObject(
                 context, name, content_type, request)
