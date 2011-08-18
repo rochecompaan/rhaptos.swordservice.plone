@@ -8,7 +8,6 @@ from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import getAdapter, getMultiAdapter
 from zope.publisher.interfaces import IPublishTraverse
 from zope.interface import Interface, directlyProvides, directlyProvidedBy
-from Acquisition import aq_base
 from ZPublisher.HTTPRequest import HTTPRequest
 from ZPublisher.HTTPResponse import HTTPResponse
 from Products.Five import BrowserView
@@ -82,6 +81,35 @@ class TestSwordService(PloneTestCase.PloneTestCase):
 
         # Test that we can still reach the edit-iri
         assert self.folder.unrestrictedTraverse('perry-zip/sword/edit')
+
+    def testMultipart(self):
+        view = self.portal.restrictedTraverse('sword')
+        # Upload a zip file
+        body_content = os.path.join(DIRNAME, 'data', 'multipart.txt')
+        file = open(body_content, 'r')
+        env = {
+            'CONTENT_TYPE': 'multipart/related; boundary="===============1338623209=="',
+            'SLUG': 'multipart',
+            'CONTENT_LENGTH': os.path.getsize(body_content),
+            'REQUEST_METHOD': 'POST',
+            'SERVER_NAME': 'nohost',
+            'SERVER_PORT': '80'
+        }
+        uploadresponse = HTTPResponse(stdout=StringIO())
+        uploadrequest = clone_request(self.app.REQUEST, uploadresponse, env)
+        uploadrequest.stdin = file
+        # Fake PARENTS
+        uploadrequest.set('PARENTS', [self.folder])
+
+        # Call the sword view on this request to perform the upload
+        self.setRoles(('Manager',))
+        adapter = getMultiAdapter(
+            (self.folder, uploadrequest), Interface, 'sword')
+        xml = adapter()
+        file.close()
+        self.assertTrue(bool(xml), "Upload view does not return a result")
+        self.assertTrue("<sword:error" not in xml, xml)
+        self.assertTrue('multipart' in self.folder.objectIds(), "upload failed")
 
     def testContentRetrieve(self):
         id = self.folder.invokeFactory('Folder', 'workspace')
