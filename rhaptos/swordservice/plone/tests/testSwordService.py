@@ -55,12 +55,12 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         assert "<sword:error" not in view()
 
         # Upload a zip file
-        zipfilename = os.path.join(DIRNAME, 'data', 'perry.zip')
+        zipfilename = os.path.join(DIRNAME, 'data', 'multipart.txt')
         zipfile = open(zipfilename, 'r')
         env = {
             'CONTENT_TYPE': 'application/zip',
             'CONTENT_LENGTH': os.path.getsize(zipfilename),
-            'CONTENT_DISPOSITION': 'attachment; filename=perry.zip',
+            'CONTENT_DISPOSITION': 'attachment; filename=multipart.txt',
             'REQUEST_METHOD': 'POST',
             'SERVER_NAME': 'nohost',
             'SERVER_PORT': '80'
@@ -80,7 +80,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         assert "<sword:error" not in xml, xml
 
         # Test that we can still reach the edit-iri
-        assert self.folder.unrestrictedTraverse('perry-zip/sword/edit')
+        assert self.folder.unrestrictedTraverse('multipart-txt/sword/edit')
 
     def testMultipart(self):
         view = self.portal.restrictedTraverse('sword')
@@ -117,7 +117,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
 
         id = workspace.invokeFactory('File', 'content_file')
         content_file = workspace[id]
-        zipfilename = os.path.join(DIRNAME, 'data', 'perry.zip')
+        zipfilename = os.path.join(DIRNAME, 'data', 'multipart.txt')
         file = open(zipfilename, 'r')
         content_file.setFile(file)
     
