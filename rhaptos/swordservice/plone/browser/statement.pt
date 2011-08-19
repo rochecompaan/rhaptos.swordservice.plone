@@ -5,49 +5,5 @@
        xmlns:tal="http://xml.zope.org/namespaces/tal"
        tal:define="context nocall:view/context">
 
-    <link rel="edit" href="edit-iri"
-          tal:attributes="href string:${context/absolute_url}/sword/edit" />
-    <link rel="edit-media" href="edit-media-iri"
-          tal:attributes="href context/absolute_url" />
-    <link rel="http://purl.org/net/sword/terms/add"
-          href="http://www.swordserver.ac.uk/col1/mydeposit.atom"
-          tal:attributes="href string:${context/absolute_url}/sword/edit" />
-    <link rel="http://purl.org/net/sword/terms/statement"
-          href="statement_IRI"
-          tal:attributes="href string:${context/absolute_url}/sword/@@statement"
-          type="application/atom+xml" />
-
-    <link tal:condition="options/upload|nothing"
-          rel="http://purl.org/net/sword/terms/originalDeposit"
-          href="iri"
-          tal:attributes="href context/absolute_url" />
-
-    <link tal:repeat="item options/derived|nothing"
-          rel="http://purl.org.net/sword/terms/derivedResource"
-          href="iri" 
-          tal:attributes="href item/absolute_url" />
-    
-    <sword:state href="http://sword/state"
-          tal:attributes="href string:${context/absolute_url}">
-        <sword:stateDescription tal:content="view/state_description">
-            The item has passed through the workflow and is now archived
-        </sword:stateDescription>
-    </sword:state>
-
-    <sword:originalDeposit href="http://location/of/deposit"
-        tal:attributes="href context/absolute_url">
-        <sword:packaging tal:content="view/packaging">
-            application/xhtml+xml
-        </sword:packaging>
-    </sword:originalDeposit>
-
-    <sword:treatment tal:content="view/treatment">Stored</sword:treatment>
-    <title tal:content="context/Title">package title</title>
-    <id tal:content="context/absolute_url">1234</id>
-    <updated tal:content="context/modified">2008-08-18T14:27:08Z</updated>
-    <author><name tal:content="context/Creator">jbloggs</name></author>
-    <dcterms:available tal:content="context/getEffectiveDate">Date Available</dcterms:available>
-    <dcterms:description tal:content="context/Description">Description</dcterms:description>
-    <dcterms:title tal:content="context/Title">Title</dcterms:title>
-
+    statement
 </entry>
