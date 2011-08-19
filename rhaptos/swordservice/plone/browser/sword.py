@@ -28,6 +28,7 @@ from Products.Archetypes.Marshall import formatRFC822Headers
 
 from rhaptos.atompub.plone.browser.atompub import PloneFolderAtomPubAdapter
 from rhaptos.atompub.plone.browser.atompub import METADATA_MAPPING
+from rhaptos.atompub.plone.exceptions import PreconditionFailed
 
 from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
@@ -60,6 +61,8 @@ def show_error_document(func):
             return _abort_and_show(405)
         except Unauthorized:
             return _abort_and_show(401)
+        except PreconditionFailed:
+            return _abort_and_show(412)
         except:
             return _abort_and_show(400)
         return value
