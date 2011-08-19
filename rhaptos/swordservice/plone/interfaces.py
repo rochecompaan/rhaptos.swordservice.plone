@@ -19,3 +19,9 @@ class ISWORDServiceDocument(Interface):
 class ISWORDDepositReceipt(Interface):
     """ Marker interface for content that can be adapted to show an edit
         document. """
+
+class ISWORDService(Interface):
+    """ Marker interface for SWORD service """
+
+class ISWORDStatement(Interface):
+    """ Marker interface for SWORD service """

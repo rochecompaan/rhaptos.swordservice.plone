@@ -8,7 +8,7 @@ from xml.dom.minidom import parse
 from base64 import encodestring as b64encode
 import transaction
 
-from zope.interface import Interface, implements
+from zope.interface import implements
 from zope.publisher.interfaces import IPublishTraverse
 from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
@@ -30,23 +30,16 @@ from rhaptos.atompub.plone.browser.atompub import PloneFolderAtomPubAdapter
 from rhaptos.atompub.plone.browser.atompub import METADATA_MAPPING
 
 from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
-from rhaptos.swordservice.plone.interfaces import ISWORDContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
 from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
 from rhaptos.swordservice.plone.interfaces import ISWORDRetrieveContentAdapter
+from rhaptos.swordservice.plone.interfaces import ISWORDService
+from rhaptos.swordservice.plone.interfaces import ISWORDStatement
 
 try:
     from zope.contenttype import guess_content_type
 except ImportError:
     from zope.app.content_types import guess_content_type
-
-
-class ISWORDService(Interface):
-    """ Marker interface for SWORD service """
-
-
-class ISWORDStatement(Interface):
-    """ Marker interface for SWORD service """
 
 
 def show_error_document(func):
