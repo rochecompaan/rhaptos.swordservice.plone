@@ -53,7 +53,8 @@ def show_error_document(func):
             transaction.abort()
             formatted_tb = traceback.format_exc()
             self.request.response.setStatus(status)
-            return self.errordocument(error=sys.exc_info()[1], 
+            return ViewPageTemplateFile('errordocument.pt').__of__(
+                self.context)(error=sys.exc_info()[1],
                 traceback=formatted_tb)
         try:
             value = func(*args, **kwargs)
@@ -72,8 +73,6 @@ def show_error_document(func):
 class SWORDService(BrowserView):
 
     implements(ISWORDService, IPublishTraverse)
-
-    errordocument = ViewPageTemplateFile('errordocument.pt')
 
     @show_error_document
     def __call__(self):
@@ -159,8 +158,17 @@ class EditIRI(BrowserView):
 
     depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
 
-    def __call__(self, upload=False):
-        return self.depositreceipt(upload=upload)
+    @show_error_document
+    def __call__(self):
+        method = self.request.get('REQUEST_METHOD')
+        if method == 'GET':
+            return self.depositreceipt()
+        elif method == 'POST':
+            raise NotImplementedError, "TODO"
+        elif method == 'PUT':
+            raise NotImplementedError, "TODO"
+        else:
+            raise MethodNotAllowed("Method %s not supported" % method)
 
 class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
     """ Adapts a context to an ISWORDContentUploadAdapter. An
