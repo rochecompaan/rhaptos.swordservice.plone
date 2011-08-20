@@ -98,7 +98,7 @@ class SWORDService(BrowserView):
         # Return the optional deposit receipt
         ob = ob.__of__(self.context)
         view = ob.unrestrictedTraverse('sword/edit')
-        return view(upload=True)
+        return view.depositreceipt(upload=True)
 
     def _handleGet(self):
         """ Get files as sword packages """
