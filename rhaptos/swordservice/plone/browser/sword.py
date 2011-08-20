@@ -163,11 +163,11 @@ class DepositReceipt(BrowserView):
         return self.depositreceipt(upload=upload)
 
 class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
-    """ Adapts a context to an ISWORDContentAdapter. An ISWORDContentAdapter
-        contains the functionality to actually create the content. Write
-        your own if you don't want the default behaviour, which is very
-        webdav like, it just creates a file corresponding to whatever you
-        uploaded. 
+    """ Adapts a context to an ISWORDContentUploadAdapter. An
+        ISWORDContentUploadAdapter contains the functionality to 
+        create content in a collection. Write your own if you don't want the
+        default behaviour, which is very webdav like, it just creates a file
+        corresponding to whatever you uploaded. 
         
         This one needs to handle multipart requests too.
     """
