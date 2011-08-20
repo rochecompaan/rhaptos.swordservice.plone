@@ -38,7 +38,7 @@
         for="Products.ATContentTypes.interface.file.IATFile
              zope.publisher.interfaces.http.IHTTPRequest"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDEditIRI"
-        factory=".sword.DepositReceipt" />
+        factory=".sword.EditIRI" />
 
     <adapter
         for="Products.ATContentTypes.interface.file.IATFile

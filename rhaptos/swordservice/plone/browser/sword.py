@@ -150,7 +150,7 @@ class ServiceDocument(BrowserView):
         return getToolByName(self.context, 'portal_url').getPortalObject().Title()
 
 
-class DepositReceipt(BrowserView):
+class EditIRI(BrowserView):
     """ Adapts a context and renders an edit document for it. This should
         only be possible for uploaded content. This class is therefore bound
         to ATFile (for the default plone installation) in zcml. """
