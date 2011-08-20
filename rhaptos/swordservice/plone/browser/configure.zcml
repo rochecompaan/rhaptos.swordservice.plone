@@ -25,7 +25,7 @@
         provides="rhaptos.swordservice.plone.interfaces.ISWORDContentUploadAdapter"
         factory=".sword.PloneFolderSwordAdapter" />
 
-    <!-- Adapters for ISWORDDepositReceipt and ISWORDServiceDocument. Folderish
+    <!-- Adapters for ISWORDEditIRI and ISWORDServiceDocument. Folderish
          objects are collections and have a service document, Files are
          uploaded content and have an edit-iri -->
     <adapter
@@ -37,7 +37,7 @@
     <adapter
         for="Products.ATContentTypes.interface.file.IATFile
              zope.publisher.interfaces.http.IHTTPRequest"
-        provides="rhaptos.swordservice.plone.interfaces.ISWORDDepositReceipt"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDEditIRI"
         factory=".sword.DepositReceipt" />
 
     <adapter
