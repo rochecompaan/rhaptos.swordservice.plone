@@ -16,9 +16,10 @@ class ISWORDServiceDocument(Interface):
     """ Marker interface for content that can be adapted to show a service
         document. """
 
-class ISWORDDepositReceipt(Interface):
-    """ Marker interface for content that can be adapted to show an edit
-        document. """
+class ISWORDEditIRI(Interface):
+    """ Marker interface for content that can be sword resources, which means
+        they hand you a deposit receipt on GET, and provide PUT and POST
+        functionality to otherwise modify the content. """
 
 class ISWORDService(Interface):
     """ Marker interface for SWORD service """

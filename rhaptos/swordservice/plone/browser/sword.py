@@ -32,7 +32,7 @@ from rhaptos.atompub.plone.exceptions import PreconditionFailed
 
 from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
-from rhaptos.swordservice.plone.interfaces import ISWORDDepositReceipt
+from rhaptos.swordservice.plone.interfaces import ISWORDEditIRI
 from rhaptos.swordservice.plone.interfaces import ISWORDRetrieveContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDService
 from rhaptos.swordservice.plone.interfaces import ISWORDStatement
@@ -118,7 +118,7 @@ class SWORDService(BrowserView):
         """
         ifaces = {
             'servicedocument': ISWORDServiceDocument,
-            'edit': ISWORDDepositReceipt
+            'edit': ISWORDEditIRI
         }
         iface = ifaces.get(name, None)
         if iface is not None:
@@ -155,7 +155,7 @@ class DepositReceipt(BrowserView):
         only be possible for uploaded content. This class is therefore bound
         to ATFile (for the default plone installation) in zcml. """
     __name__ = "edit"
-    implements(ISWORDDepositReceipt)
+    implements(ISWORDEditIRI)
 
     depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
 
