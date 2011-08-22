@@ -189,10 +189,9 @@ class EditIRI(BrowserView):
         raise NotImplementedError, "TODO"
 
     def _handlePublish(self):
-        context = aq_inner(self.context)
-        wft = getToolByName(context, 'portal_workflow')
-        if wft.getInfoFor(context, 'review_state') != 'published':
-            wft.doActionFor(context, 'publish')
+        """ Default implementation does nothing, because ATFile has no
+            workflow. """
+        pass
 
     @show_error_document
     def __call__(self):
