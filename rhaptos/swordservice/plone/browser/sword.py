@@ -38,12 +38,6 @@ from rhaptos.swordservice.plone.interfaces import ISWORDRetrieveContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDService
 from rhaptos.swordservice.plone.interfaces import ISWORDStatement
 
-try:
-    from zope.contenttype import guess_content_type
-except ImportError:
-    from zope.app.content_types import guess_content_type
-
-
 def show_error_document(func):
     """ This is a decorator to be applied on the methods in the SwordService
         class. It checks for exceptions, and renders an error document
