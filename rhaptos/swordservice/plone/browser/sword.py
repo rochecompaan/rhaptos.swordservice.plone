@@ -21,6 +21,7 @@ from webdav.NullResource import NullResource
 from Products.CMFCore.permissions import View
 from Products.Five import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+from Products.Five.browser.pagetemplatefile import ZopeTwoPageTemplateFile
 from Products.CMFCore.utils import getToolByName
 from Products.CMFCore.interfaces import IFolderish
 from Products.ATContentTypes.interface.file import IATFile
@@ -54,9 +55,16 @@ def show_error_document(func):
             transaction.abort()
             formatted_tb = traceback.format_exc()
             self.request.response.setStatus(status)
-            return ViewPageTemplateFile('errordocument.pt').__of__(
-                self.context)(error=sys.exc_info()[1],
-                traceback=formatted_tb)
+            view = ViewPageTemplateFile('errordocument.pt')
+            if view.__class__.__name__ == 'ZopeTwoPageTemplateFile':
+                # Zope 2.9
+                return ViewPageTemplateFile('errordocument.pt').__of__(
+                    self.context)(error=sys.exc_info()[1],
+                    traceback=formatted_tb)
+            else:
+                # Everthing else
+                return ViewPageTemplateFile('errordocument.pt')(self,
+                    error=sys.exc_info()[1], traceback=formatted_tb)
         try:
             value = func(*args, **kwargs)
         except MethodNotAllowed:
@@ -181,7 +189,14 @@ class EditIRI(BrowserView):
             in_progress = getHeader(self.request, 'In-Progress', 'false')
             if in_progress == 'false':
                 assert len(self.request['BODYFILE'])==0, "Posted body must be empty"
-                return self._handlePublish()
+                self._handlePublish()
+                # We SHOULD return a deposit receipt, status code 200, and the Edit-IRI
+                # in the Location header.
+                context = aq_inner(self.context)
+                self.request.response.setHeader('Location', '%s/sword/edit' % context.absolute_url())
+                self.request.response.setStatus(200)
+                view = context.unrestrictedTraverse('sword/edit')
+                return view.depositreceipt()
 
     def _handleDelete(self):
         """ a DELETE on the Edit-IRI deletes the container, ie, the Zip File.
