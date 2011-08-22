@@ -27,6 +27,7 @@ from Products.ATContentTypes.interface.file import IATFile
 from Products.Archetypes.Marshall import formatRFC822Headers
 
 from rhaptos.atompub.plone.browser.atompub import PloneFolderAtomPubAdapter
+from rhaptos.atompub.plone.browser.atompub import getHeader
 from rhaptos.atompub.plone.browser.atompub import METADATA_MAPPING
 from rhaptos.atompub.plone.exceptions import PreconditionFailed
 
@@ -168,12 +169,30 @@ class EditIRI(BrowserView):
         """ A POST fo the Edit-IRI can do one of two things. You can either add
             more metadata by posting an atom entry, or you can publish the
             module with an empty request and In-Progress set to false. """
-        raise NotImplementedError, "TODO"
+        content_type = getHeader(self.request, 'Content-Type')
+        if content_type.startswith('application/atom+xml'):
+            # Apply more metadata to the item
+            raise NotImplementedError, "TODO"
+        else:
+            # The client SHOULD provide a Content-Length set to zero, but it
+            # doesn't have to. It SHOULD set In-Progress to false, but it
+            # doesn't have to. We will therefore merely assert that the body
+            # is in fact empty.
+            in_progress = getHeader(self.request, 'In-Progress', 'false')
+            if in_progress == 'false':
+                assert len(self.request['BODYFILE'])==0, "Posted body must be empty"
+                return self._handlePublish()
 
     def _handleDelete(self):
         """ a DELETE on the Edit-IRI deletes the container, ie, the Zip File.
         """
         raise NotImplementedError, "TODO"
+
+    def _handlePublish(self):
+        context = aq_inner(self.context)
+        wft = getToolByName(context, 'portal_workflow')
+        wft.getInfoFor(context, 'review_state') != 'published':
+            wft.doActionFor(context, 'publish')
 
     @show_error_document
     def __call__(self):
