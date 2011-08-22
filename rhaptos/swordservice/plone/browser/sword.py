@@ -191,7 +191,7 @@ class EditIRI(BrowserView):
     def _handlePublish(self):
         context = aq_inner(self.context)
         wft = getToolByName(context, 'portal_workflow')
-        wft.getInfoFor(context, 'review_state') != 'published':
+        if wft.getInfoFor(context, 'review_state') != 'published':
             wft.doActionFor(context, 'publish')
 
     @show_error_document
