@@ -9,7 +9,6 @@ from base64 import encodestring as b64encode
 import transaction
 
 from zope.interface import implements
-from zope.publisher.interfaces import IPublishTraverse
 from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
 
@@ -81,7 +80,7 @@ def show_error_document(func):
 
 class SWORDService(BrowserView):
 
-    implements(ISWORDService, IPublishTraverse)
+    implements(ISWORDService)
 
     @show_error_document
     def __call__(self):
