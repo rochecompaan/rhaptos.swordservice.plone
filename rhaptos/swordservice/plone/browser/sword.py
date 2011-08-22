@@ -158,15 +158,32 @@ class EditIRI(BrowserView):
 
     depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
 
+    def _handleGet(self):
+        """ A GET on the Edit-IRI should return the deposit receipt. You
+            can override this method in your subclasses, or provide an
+            equivalent in your adapters. """
+        return self.depositreceipt()
+
+    def _handlePost(self):
+        """ A POST fo the Edit-IRI can do one of two things. You can either add
+            more metadata by posting an atom entry, or you can publish the
+            module with an empty request and In-Progress set to false. """
+        raise NotImplementedError, "TODO"
+
+    def _handleDelete(self):
+        """ a DELETE on the Edit-IRI deletes the container, ie, the Zip File.
+        """
+        raise NotImplementedError, "TODO"
+
     @show_error_document
     def __call__(self):
         method = self.request.get('REQUEST_METHOD')
         if method == 'GET':
-            return self.depositreceipt()
+            return self._handleGet()
         elif method == 'POST':
-            raise NotImplementedError, "TODO"
-        elif method == 'PUT':
-            raise NotImplementedError, "TODO"
+            return self._handlePost()
+        elif method == 'DELETE':
+            return self._handleDelete()
         else:
             raise MethodNotAllowed("Method %s not supported" % method)
 
