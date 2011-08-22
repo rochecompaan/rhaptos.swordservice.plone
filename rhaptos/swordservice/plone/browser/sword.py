@@ -170,21 +170,20 @@ class EditIRI(BrowserView):
         """ A POST fo the Edit-IRI can do one of two things. You can either add
             more metadata by posting an atom entry, or you can publish the
             module with an empty request and In-Progress set to false. """
-        content_type = getHeader(self.request, 'Content-Type')
+        content_type = getHeader(self.request, 'Content-Type', '')
         if content_type.startswith('application/atom+xml'):
             # Apply more metadata to the item
             raise NotImplementedError, "TODO"
         else:
             # The client SHOULD provide a Content-Length set to zero, but it
             # doesn't have to. It SHOULD set In-Progress to false, but it
-            # doesn't have to. We will therefore merely assert that the body
-            # is in fact empty.
+            # doesn't have to. We could check that the body is empty, but why
+            # bother. Publish.
             in_progress = getHeader(self.request, 'In-Progress', 'false')
             if in_progress == 'false':
-                assert len(self.request['BODYFILE'])==0, "Posted body must be empty"
                 self._handlePublish()
-                # We SHOULD return a deposit receipt, status code 200, and the Edit-IRI
-                # in the Location header.
+                # We SHOULD return a deposit receipt, status code 200, and the
+                # Edit-IRI in the Location header.
                 context = aq_inner(self.context)
                 self.request.response.setHeader('Location', '%s/sword/edit' % context.absolute_url())
                 self.request.response.setStatus(200)
