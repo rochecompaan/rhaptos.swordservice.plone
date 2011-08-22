@@ -14,7 +14,7 @@ from Products.Five import BrowserView
 
 from Products.PloneTestCase import PloneTestCase
 
-from rhaptos.swordservice.plone.browser.sword import ISWORDService
+from rhaptos.swordservice.plone.browser.sword import ISWORDService, ISWORDEditIRI
 from rhaptos.swordservice.plone.browser.sword import ServiceDocument
 
 PloneTestCase.setupPloneSite()
@@ -81,6 +81,21 @@ class TestSwordService(PloneTestCase.PloneTestCase):
 
         # Test that we can still reach the edit-iri
         assert self.folder.unrestrictedTraverse('multipart-txt/sword/edit')
+
+        # Test publish
+        env = {
+            'CONTENT_LENGTH': '0',
+            'REQUEST_METHOD': 'POST',
+            'SERVER_NAME': 'nohost',
+            'SERVER_PORT': '80'
+        }
+        publishresponse = HTTPResponse(stdout=StringIO())
+        publishrequest = clone_request(self.app.REQUEST, publishresponse, env)
+        publishrequest.set('PARENTS', [self.folder])
+        xml = getMultiAdapter(
+            (self.folder['multipart-txt'], publishrequest), ISWORDEditIRI)()
+        self.assertTrue(bool(xml), "Publish returned nothing")
+        self.assertTrue("<sword:error" not in xml, xml)
 
     def testMultipart(self):
         view = self.portal.restrictedTraverse('sword')
