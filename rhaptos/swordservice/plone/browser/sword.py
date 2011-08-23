@@ -86,34 +86,25 @@ class SWORDService(BrowserView):
         else:
             raise MethodNotAllowed("Method %s not supported" % method)
 
-    def _handlePublish(self, ob):
-        """ This is called if a module is published during an upload operation
-            by setting the In-Progress header to false, or by omitting it. It
-            is a separate method in this class, because you might want to treat
-            this case differently. In fact, you may be forced to, because the
-            context is different and might change during publishing. The
-            default implementation simply calls the publish method on the
-            EditIRI view. """
-        view = ob.unrestrictedTraverse('sword/edit')
-        view._handlePublish()
-
     def _handlePost(self):
         # Adapt and call
         adapter = getMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
         ob = adapter()
+
+        # Get the Edit-IRI
         ob = ob.__of__(self.context)
+        view = ob.unrestrictedTraverse('sword/edit')
 
         # Optionally publish
         if getHeader(self.request, 'In-Progress', 'false') == 'false':
-            self._handlePublish(ob)
+            view._handlePublish()
 
         # We must return status 201, and Location must be set to the edit IRI
         self.request.response.setHeader('Location', '%s/sword/edit' % ob.absolute_url())
         self.request.response.setStatus(201)
 
         # Return the optional deposit receipt
-        view = ob.unrestrictedTraverse('sword/edit')
         return view.depositreceipt(upload=True)
 
     def _handleGet(self):
