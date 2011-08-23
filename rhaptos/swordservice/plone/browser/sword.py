@@ -92,13 +92,19 @@ class SWORDService(BrowserView):
             (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
         ob = adapter()
 
+        # Get the Edit-IRI
+        ob = ob.__of__(self.context)
+        view = ob.unrestrictedTraverse('sword/edit')
+
+        # Optionally publish
+        if getHeader(self.request, 'In-Progress', 'false') == 'false':
+            view._handlePublish()
+
         # We must return status 201, and Location must be set to the edit IRI
         self.request.response.setHeader('Location', '%s/sword/edit' % ob.absolute_url())
         self.request.response.setStatus(201)
 
         # Return the optional deposit receipt
-        ob = ob.__of__(self.context)
-        view = ob.unrestrictedTraverse('sword/edit')
         return view.depositreceipt(upload=True)
 
     def _handleGet(self):

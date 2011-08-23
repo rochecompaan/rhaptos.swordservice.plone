@@ -63,7 +63,8 @@ class TestSwordService(PloneTestCase.PloneTestCase):
             'CONTENT_DISPOSITION': 'attachment; filename=multipart.txt',
             'REQUEST_METHOD': 'POST',
             'SERVER_NAME': 'nohost',
-            'SERVER_PORT': '80'
+            'SERVER_PORT': '80',
+            'IN_PROGRESS': 'true',
         }
         uploadresponse = HTTPResponse(stdout=StringIO())
         uploadrequest = clone_request(self.app.REQUEST, uploadresponse, env)
