@@ -26,3 +26,7 @@ class ISWORDService(Interface):
 
 class ISWORDStatement(Interface):
     """ Marker interface for SWORD service """
+
+class ISWORDStatementAtomAdapter(Interface):
+    """ Marker interface for Atom feed adapter.
+    """

@@ -37,6 +37,7 @@ from rhaptos.swordservice.plone.interfaces import ISWORDEditIRI
 from rhaptos.swordservice.plone.interfaces import ISWORDRetrieveContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDService
 from rhaptos.swordservice.plone.interfaces import ISWORDStatement
+from rhaptos.swordservice.plone.interfaces import ISWORDStatementAtomAdapter
 
 def show_error_document(func):
     """ This is a decorator to be applied on the methods in the SwordService
@@ -127,6 +128,7 @@ class SWORDService(BrowserView):
             'servicedocument': ISWORDServiceDocument,
             'edit': ISWORDEditIRI,
             'statement': ISWORDStatement,
+            'atom': ISWORDStatementAtomAdapter,
         }
         iface = ifaces.get(name, None)
         if iface is not None:
@@ -319,36 +321,6 @@ class RetrieveContent(object):
         return data
 
 
-class SWORDStatement(BrowserView):
-
-    implements(ISWORDStatement)
-
-
-    def treatment(self):
-        return 'Stored'
-    
-
-    def state_description(self):
-        obj = self.context.aq_inner
-        state = self.workflow_state(obj)
-        return "The item state is:%s" %state
-
-    
-    def workflow_state(self, obj):
-        state = 'private'
-        wft = getToolByName(obj, 'portal_workflow')
-        if wft.getChainFor(obj):
-            state = wft.getInfoFor(obj, 'review_state')
-        return state
-
-    
-    def packaging(self):
-        """ This can be elaborated to return the actual packacking.
-            At the moment we put simple xhtml in the file.
-        """
-        return 'application/xhtml+xml'
-
-
 class SWORDStatementAdapter(BrowserView):
     __name__ = "statement"
 
@@ -389,5 +361,22 @@ class SWORDStatementAdapter(BrowserView):
             At the moment we put simple xhtml in the file.
         """
         return 'application/xhtml+xml'
+
+
+class SWORDStatementAtomAdapter(BrowserView):
+    __name__ = "atom"
+
+    implements(ISWORDStatementAtomAdapter)
+    
+    atom = ViewPageTemplateFile('atom.pt')
+
+
+    @show_error_document
+    def __call__(self):
+        method = self.request.get('REQUEST_METHOD')
+        if method == 'GET':
+            return self.atom()
+        else:
+            raise MethodNotAllowed("Method %s not supported" % method)
 
 

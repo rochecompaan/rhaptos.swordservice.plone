@@ -10,13 +10,6 @@
         class=".sword.SWORDService"
         permission="zope2.View" />
 
-    <browser:page
-        for="Products.ATContentTypes.interface.file.IATFile"
-        name="statement"
-        class=".sword.SWORDStatement"
-        template="statement.pt"
-        permission="zope2.View" />
-
     <!-- This adapts folderish objects into sword collections. Override this
          for your own types -->
     <adapter
@@ -45,6 +38,12 @@
              zope.publisher.interfaces.http.IHTTPRequest"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDStatement"
         factory=".sword.SWORDStatementAdapter" />
+
+    <adapter
+        for="Products.CMFCore.interfaces.IFolderish
+             zope.publisher.interfaces.http.IHTTPRequest"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDStatementAtomAdapter"
+        factory=".sword.SWORDStatementAtomAdapter" />
 
     <adapter
         for="Products.ATContentTypes.interface.file.IATFile
