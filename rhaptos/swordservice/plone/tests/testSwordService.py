@@ -4,6 +4,8 @@ if __name__ == '__main__':
 
 from StringIO import StringIO
 from base64 import decodestring
+from xml.dom.minidom import parse, parseString
+
 from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import getAdapter, getMultiAdapter
 from zope.publisher.interfaces import IPublishTraverse
@@ -16,6 +18,7 @@ from Products.PloneTestCase import PloneTestCase
 
 from rhaptos.swordservice.plone.browser.sword import ISWORDService, ISWORDEditIRI
 from rhaptos.swordservice.plone.browser.sword import ServiceDocument
+from rhaptos.swordservice.plone.interfaces import ISWORDStatement
 
 PloneTestCase.setupPloneSite()
 
@@ -161,6 +164,7 @@ class TestSwordService(PloneTestCase.PloneTestCase):
             'REQUEST_METHOD': 'POST',
             'CONTENT_LENGTH': len(content),
             'CONTENT_TYPE': 'application/atom+xml;type=entry',
+            'CONTENT_DISPOSITION': 'attachment; filename=entry.xml',
             'SERVER_NAME': 'nohost',
             'SERVER_PORT': '80'
         }
@@ -175,10 +179,28 @@ class TestSwordService(PloneTestCase.PloneTestCase):
 
         id = self.folder.workspace.objectIds()[0]
         file = self.folder.workspace[id]
-        adapter = getMultiAdapter(
-                (file, self.portal.REQUEST), Interface, 'statement')
+        adapter = getMultiAdapter((file, self.portal.REQUEST), ISWORDStatement)
         xml = adapter()
         assert "<sword:error" not in xml, xml
+        dom = parseString(xml)
+        returned_statement = dom.toxml()
+
+        obj = self.folder.workspace.objectValues()[0]
+        file = open(os.path.join(DIRNAME, 'data', 'entry_statement.xml'), 'r')
+        dom = parse(file)
+        file.close()
+        dates = dom.getElementsByTagName('updated')
+        dates[0].firstChild.nodeValue = obj.modified()
+        reference_statement = dom.toxml()
+        # still lotsa tests to add here.
+        #self.assertEqual(returned_statement, reference_statement,
+        #    'Result does not match reference doc')
+
+
+    def writecontents(self, contents, filename):
+        file = open(os.path.join(DIRNAME, 'data', filename), 'w')
+        file.write(contents)
+        file.close()
 
 
 def test_suite():
