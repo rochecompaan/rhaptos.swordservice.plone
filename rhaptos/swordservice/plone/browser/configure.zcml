@@ -43,6 +43,12 @@
     <adapter
         for="Products.ATContentTypes.interface.file.IATFile
              zope.publisher.interfaces.http.IHTTPRequest"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDStatement"
+        factory=".sword.SWORDStatementAdapter" />
+
+    <adapter
+        for="Products.ATContentTypes.interface.file.IATFile
+             zope.publisher.interfaces.http.IHTTPRequest"
         provides="rhaptos.swordservice.plone.interfaces.ISWORDRetrieveContentAdapter"
         factory=".sword.RetrieveContent" />
 

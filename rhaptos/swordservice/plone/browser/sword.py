@@ -125,7 +125,8 @@ class SWORDService(BrowserView):
         """
         ifaces = {
             'servicedocument': ISWORDServiceDocument,
-            'edit': ISWORDEditIRI
+            'edit': ISWORDEditIRI,
+            'statement': ISWORDStatement,
         }
         iface = ifaces.get(name, None)
         if iface is not None:
@@ -346,3 +347,47 @@ class SWORDStatement(BrowserView):
             At the moment we put simple xhtml in the file.
         """
         return 'application/xhtml+xml'
+
+
+class SWORDStatementAdapter(BrowserView):
+    __name__ = "statement"
+
+    implements(ISWORDStatement)
+    
+    statement = ViewPageTemplateFile('statement.pt')
+
+
+    @show_error_document
+    def __call__(self):
+        method = self.request.get('REQUEST_METHOD')
+        if method == 'GET':
+            return self.statement()
+        else:
+            raise MethodNotAllowed("Method %s not supported" % method)
+
+
+    def treatment(self):
+        return 'Stored'
+    
+
+    def state_description(self):
+        obj = self.context.aq_inner
+        state = self.workflow_state(obj)
+        return "The item state is:%s" %state
+
+    
+    def workflow_state(self, obj):
+        state = 'private'
+        wft = getToolByName(obj, 'portal_workflow')
+        if wft.getChainFor(obj):
+            state = wft.getInfoFor(obj, 'review_state')
+        return state
+
+    
+    def packaging(self):
+        """ This can be elaborated to return the actual packacking.
+            At the moment we put simple xhtml in the file.
+        """
+        return 'application/xhtml+xml'
+
+
