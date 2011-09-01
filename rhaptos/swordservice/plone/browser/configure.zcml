@@ -8,7 +8,7 @@
         for="*"
         name="sword"
         class=".sword.SWORDService"
-        permission="zope2.View" />
+        permission="cmf.SetOwnPassword" />
 
     <!-- This adapts folderish objects into sword collections. Override this
          for your own types -->
