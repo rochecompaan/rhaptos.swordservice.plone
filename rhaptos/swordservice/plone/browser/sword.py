@@ -6,6 +6,7 @@ from DateTime import DateTime
 from email import message_from_file
 from xml.dom.minidom import parse
 from base64 import encodestring as b64encode
+import logging
 import transaction
 
 from zope.interface import implements
@@ -39,6 +40,8 @@ from rhaptos.swordservice.plone.interfaces import ISWORDService
 from rhaptos.swordservice.plone.interfaces import ISWORDStatement
 from rhaptos.swordservice.plone.interfaces import ISWORDStatementAtomAdapter
 
+logger = logging.getLogger(__name__)
+
 def show_error_document(func):
     """ This is a decorator to be applied on the methods in the SwordService
         class. It checks for exceptions, and renders an error document
@@ -67,7 +70,8 @@ def show_error_document(func):
             return _abort_and_show(401)
         except PreconditionFailed:
             return _abort_and_show(412)
-        except:
+        except Exception:
+            logger.error(traceback.format_exc())
             return _abort_and_show(400)
         return value
     return wrapper
