@@ -21,6 +21,10 @@ class ISWORDEditIRI(Interface):
         they hand you a deposit receipt on GET, and provide PUT and POST
         functionality to otherwise modify the content. """
 
+class ISWORDEMIRI(Interface):
+    """ Marker interface for adapters that adapt content to something that
+        implements PUT and DELETE for media. """
+
 class ISWORDService(Interface):
     """ Marker interface for SWORD service """
 

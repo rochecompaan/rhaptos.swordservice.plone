@@ -36,6 +36,7 @@ from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
 from rhaptos.swordservice.plone.interfaces import ISWORDEditIRI
 from rhaptos.swordservice.plone.interfaces import ISWORDRetrieveContentAdapter
+from rhaptos.swordservice.plone.interfaces import ISWORDEMIRI
 from rhaptos.swordservice.plone.interfaces import ISWORDService
 from rhaptos.swordservice.plone.interfaces import ISWORDStatement
 from rhaptos.swordservice.plone.interfaces import ISWORDStatementAtomAdapter
@@ -88,6 +89,8 @@ class SWORDService(BrowserView):
             return self._handlePost()
         elif method == 'GET':
             return self._handleGet()
+        elif method == 'PUT':
+            return self._handlePut()
         else:
             raise MethodNotAllowed("Method %s not supported" % method)
 
@@ -117,6 +120,12 @@ class SWORDService(BrowserView):
         adapter = getMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDRetrieveContentAdapter)
         return adapter()
+
+    def _handlePut(self):
+        """ A put to the EM-IRI updates the content. """
+        adapter = getMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDEMIRI)
+        return adapter.PUT()
 
     def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
@@ -396,3 +405,16 @@ class SWORDStatementAtomAdapter(BrowserView):
             raise MethodNotAllowed("Method %s not supported" % method)
 
 
+class EditMedia(object):
+    adapts(IATFile, IHTTPRequest)
+
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+    def PUT(self):
+        context = self.context
+        context.PUT(self.request, self.request.response)
+        context.setTitle(self.request.get('Title', filename))
+        context.reindexObject(idxs='Title')
+        return context
