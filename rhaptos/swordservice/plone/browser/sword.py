@@ -213,6 +213,16 @@ class EditIRI(BrowserView):
             workflow. """
         pass
 
+    def _handlePut(self):
+        """ PUT against an existing item should update it.
+        """
+        obj = self.context
+        obj.PUT(self.request, self.request.response)
+        obj.setTitle(self.request.get('Title', filename))
+        obj.reindexObject(idxs='Title')
+        return obj
+
+
     @show_error_document
     def __call__(self):
         method = self.request.get('REQUEST_METHOD')
@@ -222,6 +232,8 @@ class EditIRI(BrowserView):
             return self._handlePost()
         elif method == 'DELETE':
             return self._handleDelete()
+        elif method == 'PUT':
+            return self._handlePut()
         else:
             raise MethodNotAllowed("Method %s not supported" % method)
 
