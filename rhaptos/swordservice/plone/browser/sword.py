@@ -11,7 +11,7 @@ import transaction
 
 from zope.interface import implements
 from zope.publisher.interfaces.http import IHTTPRequest
-from zope.component import adapts, getMultiAdapter, queryAdapter, queryUtility
+from zope.component import adapts, getMultiAdapter, queryMultiAdapter
 
 from AccessControl import ClassSecurityInfo
 from Acquisition import aq_inner
@@ -94,31 +94,42 @@ class SWORDService(BrowserView):
             raise MethodNotAllowed("Method %s not supported" % method)
 
     def _handlePost(self):
-        # Adapt and call
-        adapter = getMultiAdapter(
+        # Find an adapter for upload
+        adapter = queryMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
-        ob = adapter()
+        if adapter is not None:
+            ob = adapter()
 
-        # Get the Edit-IRI
-        ob = ob.__of__(self.context)
-        view = ob.unrestrictedTraverse('sword/edit')
+            # Get the Edit-IRI
+            ob = ob.__of__(self.context)
+            view = getMultiAdapter((ob, self.request), ISWORDEditIRI)
 
-        # Optionally publish
-        if getHeader(self.request, 'In-Progress', 'false') == 'false':
-            view._handlePublish()
+            # Optionally publish
+            if getHeader(self.request, 'In-Progress', 'false') == 'false':
+                view._handlePublish()
 
-        # We must return status 201, and Location must be set to the edit IRI
-        self.request.response.setHeader('Location', '%s/sword/edit' % ob.absolute_url())
-        self.request.response.setStatus(201)
+            # We must return status 201, and Location must be set to the edit IRI
+            self.request.response.setHeader('Location', '%s/sword' % ob.absolute_url())
+            self.request.response.setStatus(201)
 
-        # Return the optional deposit receipt
-        return view.depositreceipt(upload=True)
+            # Return the optional deposit receipt
+            return view._handleGet(upload=True)
 
-    def _handleGet(self):
-        """ Get files as sword packages """
+        # If not an upload, then we are called as the Edit-IRI on some context
         adapter = getMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDEditIRI)
-        return adapter()
+        return adapter._handlePost()
+
+    def _handleGet(self):
+        """ Lookup EditIRI adapter, call it to get a deposit receipt. """
+        adapter = getMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDEditIRI)
+        return adapter._handleGet()
+
+    def _handlePut(self):
+        adapter = getMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDEditIRI)
+        return adapter._handlePut()
 
     def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
@@ -132,7 +143,6 @@ class SWORDService(BrowserView):
         """
         ifaces = {
             'servicedocument': ISWORDServiceDocument,
-            'edit': ISWORDEditIRI,
             'editmedia': ISWORDEMIRI,
             'statement': ISWORDStatement,
             'atom': ISWORDStatementAtomAdapter,
@@ -167,20 +177,23 @@ class ServiceDocument(BrowserView):
         return getToolByName(self.context, 'portal_url').getPortalObject().Title()
 
 
-class EditIRI(BrowserView):
+class EditIRI(object):
     """ Adapts a context and renders an edit document for it. This should
         only be possible for uploaded content. This class is therefore bound
         to ATFile (for the default plone installation) in zcml. """
-    __name__ = "edit"
     implements(ISWORDEditIRI)
 
     depositreceipt = ViewPageTemplateFile('depositreceipt.pt')
 
-    def _handleGet(self):
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+    def _handleGet(self, **kw):
         """ A GET on the Edit-IRI should return the deposit receipt. You
             can override this method in your subclasses, or provide an
             equivalent in your adapters. """
-        return self.depositreceipt()
+        return self.depositreceipt(**kw)
 
     def _handlePost(self):
         """ A POST fo the Edit-IRI can do one of two things. You can either add
@@ -201,15 +214,10 @@ class EditIRI(BrowserView):
                 # We SHOULD return a deposit receipt, status code 200, and the
                 # Edit-IRI in the Location header.
                 context = aq_inner(self.context)
-                self.request.response.setHeader('Location', '%s/sword/edit' % context.absolute_url())
+                self.request.response.setHeader('Location', '%s/sword' % context.absolute_url())
                 self.request.response.setStatus(200)
-                view = context.unrestrictedTraverse('sword/edit')
-                return view.depositreceipt()
-
-    def _handleDelete(self):
-        """ a DELETE on the Edit-IRI deletes the container, ie, the Zip File.
-        """
-        raise NotImplementedError, "TODO"
+                view = context.unrestrictedTraverse('@@sword')
+                return view._handleGet()
 
     def _handlePublish(self):
         """ Default implementation does nothing, because ATFile has no
@@ -225,20 +233,6 @@ class EditIRI(BrowserView):
         obj.reindexObject(idxs='Title')
         return obj
 
-
-    @show_error_document
-    def __call__(self):
-        method = self.request.get('REQUEST_METHOD')
-        if method == 'GET':
-            return self._handleGet()
-        elif method == 'POST':
-            return self._handlePost()
-        elif method == 'DELETE':
-            return self._handleDelete()
-        elif method == 'PUT':
-            return self._handlePut()
-        else:
-            raise MethodNotAllowed("Method %s not supported" % method)
 
 class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
     """ Adapts a context to an ISWORDContentUploadAdapter. An
@@ -381,10 +375,6 @@ class SWORDStatementAtomAdapter(BrowserView):
 class EditMedia(BrowserView):
     __name__ = "editmedia"
     adapts(IATFile, IHTTPRequest)
-
-    def __init__(self, context, request):
-        self.context = context
-        self.request = request
 
     def __call__(self):
         method = self.request.get('REQUEST_METHOD')
