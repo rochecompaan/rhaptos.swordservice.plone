@@ -118,7 +118,7 @@ class SWORDService(BrowserView):
     def _handleGet(self):
         """ Get files as sword packages """
         adapter = getMultiAdapter(
-            (aq_inner(self.context), self.request), ISWORDRetrieveContentAdapter)
+            (aq_inner(self.context), self.request), ISWORDEditIRI)
         return adapter()
 
     def _handlePut(self):
@@ -140,6 +140,7 @@ class SWORDService(BrowserView):
         ifaces = {
             'servicedocument': ISWORDServiceDocument,
             'edit': ISWORDEditIRI,
+            'editmedia': ISWORDRetrieveContentAdapter,
             'statement': ISWORDStatement,
             'atom': ISWORDStatementAtomAdapter,
         }
@@ -325,9 +326,11 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
                 obj, filename, request, response, content_type)
 
 
-class RetrieveContent(object):
+class RetrieveContent(BrowserView):
     """
     """
+    __name__ = "editmedia"
+
     adapts(IATFile, IHTTPRequest)
 
     def __init__(self, context, request):
