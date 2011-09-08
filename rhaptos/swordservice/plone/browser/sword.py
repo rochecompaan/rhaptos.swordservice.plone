@@ -94,31 +94,33 @@ class SWORDService(BrowserView):
             raise MethodNotAllowed("Method %s not supported" % method)
 
     def _handlePost(self):
-        # Find an adapter for upload
+        # First attempt to treat the content as something with an EditIRI.
+        # Collections won't have one. We have to do it this way round
+        # as our content is often Folderish and is mistaken for collections.
         adapter = queryMultiAdapter(
-            (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
-        if adapter is not None:
-            ob = adapter()
-
-            # Get the Edit-IRI
-            ob = ob.__of__(self.context)
-            view = getMultiAdapter((ob, self.request), ISWORDEditIRI)
-
-            # Optionally publish
-            if getHeader(self.request, 'In-Progress', 'false') == 'false':
-                view._handlePublish()
-
-            # We must return status 201, and Location must be set to the edit IRI
-            self.request.response.setHeader('Location', '%s/sword' % ob.absolute_url())
-            self.request.response.setStatus(201)
-
-            # Return the optional deposit receipt
-            return view._handleGet(upload=True)
-
-        # If not an upload, then we are called as the Edit-IRI on some context
-        adapter = getMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDEditIRI)
-        return adapter._handlePost()
+        if adapter:
+            return adapter._handlePost()
+
+        # If our context does not have an Edit-IRI, treat is as a collection
+        adapter = getMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
+        ob = adapter()
+
+        # Get the Edit-IRI
+        ob = ob.__of__(self.context)
+        view = getMultiAdapter((ob, self.request), ISWORDEditIRI)
+
+        # Optionally publish
+        if getHeader(self.request, 'In-Progress', 'false') == 'false':
+            view._handlePublish()
+
+        # We must return status 201, and Location must be set to the edit IRI
+        self.request.response.setHeader('Location', '%s/sword' % ob.absolute_url())
+        self.request.response.setStatus(201)
+
+        # Return the optional deposit receipt
+        return view._handleGet(upload=True)
 
     def _handleGet(self):
         """ Lookup EditIRI adapter, call it to get a deposit receipt. """
