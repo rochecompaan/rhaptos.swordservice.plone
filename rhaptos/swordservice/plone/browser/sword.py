@@ -35,7 +35,6 @@ from rhaptos.atompub.plone.exceptions import PreconditionFailed
 from rhaptos.swordservice.plone.interfaces import ISWORDContentUploadAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDServiceDocument
 from rhaptos.swordservice.plone.interfaces import ISWORDEditIRI
-from rhaptos.swordservice.plone.interfaces import ISWORDRetrieveContentAdapter
 from rhaptos.swordservice.plone.interfaces import ISWORDEMIRI
 from rhaptos.swordservice.plone.interfaces import ISWORDService
 from rhaptos.swordservice.plone.interfaces import ISWORDStatement
@@ -121,12 +120,6 @@ class SWORDService(BrowserView):
             (aq_inner(self.context), self.request), ISWORDEditIRI)
         return adapter()
 
-    def _handlePut(self):
-        """ A put to the EM-IRI updates the content. """
-        adapter = getMultiAdapter(
-            (aq_inner(self.context), self.request), ISWORDEMIRI)
-        return adapter.PUT()
-
     def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
             of "sword" as a namespace in our path and use the sub path to
@@ -140,7 +133,7 @@ class SWORDService(BrowserView):
         ifaces = {
             'servicedocument': ISWORDServiceDocument,
             'edit': ISWORDEditIRI,
-            'editmedia': ISWORDRetrieveContentAdapter,
+            'editmedia': ISWORDEMIRI,
             'statement': ISWORDStatement,
             'atom': ISWORDStatementAtomAdapter,
         }
@@ -326,29 +319,6 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
                 obj, filename, request, response, content_type)
 
 
-class RetrieveContent(BrowserView):
-    """
-    """
-    __name__ = "editmedia"
-
-    adapts(IATFile, IHTTPRequest)
-
-    def __init__(self, context, request):
-        self.context = context
-        self.request = request
-
-
-    def __call__(self):
-        data = self.context.getFile().data
-        response = self.request.response
-        filename = self.context.Title()
-        response.setHeader(
-                'Content-disposition', 'attachment; filename=%s' %filename)
-        response.setHeader('Content-type', 'application/zip')
-        response.setHeader("Content-Length", len(data))
-        return data
-
-
 class SWORDStatementAdapter(BrowserView):
     __name__ = "statement"
 
@@ -408,12 +378,21 @@ class SWORDStatementAtomAdapter(BrowserView):
             raise MethodNotAllowed("Method %s not supported" % method)
 
 
-class EditMedia(object):
+class EditMedia(BrowserView):
+    __name__ = "editmedia"
     adapts(IATFile, IHTTPRequest)
 
     def __init__(self, context, request):
         self.context = context
         self.request = request
+
+    def __call__(self):
+        method = self.request.get('REQUEST_METHOD')
+        callmap = {'PUT': self.PUT, 'GET': self.GET}
+        call = callmap.get(method)
+        if call is None:
+            raise MethodNotAllowed("Method %s not supported" % method)
+        call()
 
     def PUT(self):
         context = self.context
@@ -421,3 +400,13 @@ class EditMedia(object):
         context.setTitle(self.request.get('Title', filename))
         context.reindexObject(idxs='Title')
         return context
+
+    def GET(self):
+        data = self.context.getFile().data
+        response = self.request.response
+        filename = self.context.Title()
+        response.setHeader(
+                'Content-disposition', 'attachment; filename=%s' %filename)
+        response.setHeader('Content-type', 'application/zip')
+        response.setHeader("Content-Length", len(data))
+        return data
