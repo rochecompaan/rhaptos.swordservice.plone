@@ -197,6 +197,10 @@ class TestSwordService(PloneTestCase.PloneTestCase):
         #    'Result does not match reference doc')
 
 
+    def test_handlePUT(self):
+        self.fail()
+
+
     def writecontents(self, contents, filename):
         file = open(os.path.join(DIRNAME, 'data', filename), 'w')
         file.write(contents)
