@@ -191,6 +191,18 @@ class EditIRI(object):
         self.context = context
         self.request = request
 
+    @show_error_document
+    def __call__(self):
+        method = self.request.get('REQUEST_METHOD')
+        if method == 'POST':
+            return self._handlePost()
+        elif method == 'GET':
+            return self._handleGet()
+        elif method == 'PUT':
+            return self._handlePut()
+        else:
+            raise MethodNotAllowed("Method %s not supported" % method)
+
     def _handleGet(self, **kw):
         """ A GET on the Edit-IRI should return the deposit receipt. You
             can override this method in your subclasses, or provide an
@@ -384,7 +396,7 @@ class EditMedia(BrowserView):
         call = callmap.get(method)
         if call is None:
             raise MethodNotAllowed("Method %s not supported" % method)
-        call()
+        return call()
 
     def PUT(self):
         context = self.context
