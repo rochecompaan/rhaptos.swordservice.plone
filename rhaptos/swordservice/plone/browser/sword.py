@@ -68,17 +68,17 @@ def show_error_document(func):
         except MethodNotAllowed, e:
             return _abort_and_show(405, title="Method Not Allowed",
                 summary="Method not allowed",
-                verbose=str(e),
+                treatment=str(e),
                 href="http://purl.org/net/sword/error/MethodNotAllowed")
         except Unauthorized:
             return _abort_and_show(401, title="Unauthorized")
         except PreconditionFailed, e:
             return _abort_and_show(412, title="Precondition Failed",
                 summary="Precondition Failed",
-                verbose=str(e))
+                treatment=str(e))
         except SwordException, e:
             return _abort_and_show(e.status, href=e.href, title=e.title,
-                summary=e.summary, verbose=str(e))
+                summary=e.summary, treatment=e.treatment, verbose=e.verbose)
         except Exception:
             formatted_tb = traceback.format_exc()
             logger.error(formatted_tb)

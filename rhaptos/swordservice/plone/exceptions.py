@@ -23,6 +23,16 @@ class SwordException(Exception):
     def summary(self):
         return self.__doc__
 
+    @property
+    def treatment(self):
+        if len(self.args)>0:
+            return self.args[0]
+
+    @property
+    def verbose(self):
+        if len(self.args)>1:
+            return self.args[1]
+
 class ContentNotAcceptable(SwordException):
     """ Content is not acceptable. """
     _status = 406
