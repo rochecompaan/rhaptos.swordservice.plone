@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding='utf-8'?>
 <sword:error xmlns="http://www.w3.org/2005/Atom"
              xmlns:sword="http://purl.org/net/sword/"
-             xmlns:tal="http://xml.zope.org/namespaces/tal">
+             xmlns:tal="http://xml.zope.org/namespaces/tal"
+             tal:attributes="href options/href|nothing">
 
-    <title>ERROR</title>
+    <title>ERROR <tal:t replace="options/title|nothing" /></title>
     <summary tal:content="options/error|nothing"
              tal:condition="options/error|nothing">Method not supported</summary>
     <sword:treatment>An error occurred</sword:treatment>

@@ -39,6 +39,8 @@ from rhaptos.swordservice.plone.interfaces import ISWORDEMIRI
 from rhaptos.swordservice.plone.interfaces import ISWORDService
 from rhaptos.swordservice.plone.interfaces import ISWORDStatement
 from rhaptos.swordservice.plone.interfaces import ISWORDStatementAtomAdapter
+from rhaptos.swordservice.plone.exceptions import MediationNotAllowed
+from rhaptos.swordservice.plone.exceptions import SwordException
 
 logger = logging.getLogger(__name__)
 
@@ -48,31 +50,35 @@ def show_error_document(func):
         with the stack trace embedded in the correct markup. """
     def wrapper(*args, **kwargs):
         self = args[0]
-        def _abort_and_show(status):
+        def _abort_and_show(status, **kw):
             transaction.abort()
             formatted_tb = traceback.format_exc()
+            kw.update({'traceback': formatted_tb, 'error': sys.exc_info()[1]})
             self.request.response.setStatus(status)
             view = ViewPageTemplateFile('errordocument.pt')
             if view.__class__.__name__ == 'ZopeTwoPageTemplateFile':
                 # Zope 2.9
                 return ViewPageTemplateFile('errordocument.pt').__of__(
-                    self.context)(error=sys.exc_info()[1],
-                    traceback=formatted_tb)
+                    self.context)(**kw)
             else:
                 # Everthing else
-                return ViewPageTemplateFile('errordocument.pt')(self,
-                    error=sys.exc_info()[1], traceback=formatted_tb)
+                return ViewPageTemplateFile('errordocument.pt')(self, **kw)
         try:
+            if getHeader(self.request, 'On-Behalf-Of') is not None:
+                raise MediationNotAllowed, "Mediation not allowed"
             value = func(*args, **kwargs)
         except MethodNotAllowed:
-            return _abort_and_show(405)
+            return _abort_and_show(405, title="Method Not Allowed",
+                error_uri="http://purl.org/net/sword/error/MethodNotAllowed")
         except Unauthorized:
-            return _abort_and_show(401)
+            return _abort_and_show(401, title="Unauthorized")
         except PreconditionFailed:
-            return _abort_and_show(412)
+            return _abort_and_show(412, title="Precondition Failed")
+        except SwordException, e:
+            return _abort_and_show(e.status, href=e.href, title=e.title)
         except Exception:
             logger.error(traceback.format_exc())
-            return _abort_and_show(400)
+            return _abort_and_show(400, title="Bad request")
         return value
     return wrapper
 
@@ -102,7 +108,7 @@ class SWORDService(BrowserView):
         if adapter:
             return adapter._handlePost()
 
-        # If our context does not have an Edit-IRI, treat is as a collection
+        # If our context does not have an Edit-IRI, treat it as a collection
         adapter = getMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
         ob = adapter()
@@ -124,13 +130,17 @@ class SWORDService(BrowserView):
 
     def _handleGet(self):
         """ Lookup EditIRI adapter, call it to get a deposit receipt. """
-        adapter = getMultiAdapter(
+        adapter = queryMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDEditIRI)
+        if adapter is None:
+            raise MethodNotAllowed("Method GET is not supported in this context")
         return adapter._handleGet()
 
     def _handlePut(self):
-        adapter = getMultiAdapter(
+        adapter = queryMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDEditIRI)
+        if adapter is None:
+            raise MethodNotAllowed("Method PUT is not supported in this context")
         return adapter._handlePut()
 
     def __bobo_traverse__(self, request, name):
@@ -151,8 +161,10 @@ class SWORDService(BrowserView):
         }
         iface = ifaces.get(name, None)
         if iface is not None:
-            adapter = getMultiAdapter(
+            adapter = queryMultiAdapter(
                 (aq_inner(self.context), self.request), iface)
+            if adapter is None:
+                raise AttributeError, name
             return adapter.__of__(self.context)
         return getattr(self, name)
 
