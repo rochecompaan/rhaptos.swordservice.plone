@@ -52,8 +52,6 @@ def show_error_document(func):
         self = args[0]
         def _abort_and_show(status, **kw):
             transaction.abort()
-            formatted_tb = traceback.format_exc()
-            kw.update({'traceback': formatted_tb, 'error': sys.exc_info()[1]})
             self.request.response.setStatus(status)
             view = ViewPageTemplateFile('errordocument.pt')
             if view.__class__.__name__ == 'ZopeTwoPageTemplateFile':
@@ -67,18 +65,25 @@ def show_error_document(func):
             if getHeader(self.request, 'On-Behalf-Of') is not None:
                 raise MediationNotAllowed, "Mediation not allowed"
             value = func(*args, **kwargs)
-        except MethodNotAllowed:
+        except MethodNotAllowed, e:
             return _abort_and_show(405, title="Method Not Allowed",
-                error_uri="http://purl.org/net/sword/error/MethodNotAllowed")
+                summary="Method not allowed",
+                verbose=str(e),
+                href="http://purl.org/net/sword/error/MethodNotAllowed")
         except Unauthorized:
             return _abort_and_show(401, title="Unauthorized")
-        except PreconditionFailed:
-            return _abort_and_show(412, title="Precondition Failed")
+        except PreconditionFailed, e:
+            return _abort_and_show(412, title="Precondition Failed",
+                summary="Precondition Failed",
+                verbose=str(e))
         except SwordException, e:
-            return _abort_and_show(e.status, href=e.href, title=e.title)
+            return _abort_and_show(e.status, href=e.href, title=e.title,
+                summary=e.summary, verbose=str(e))
         except Exception:
-            logger.error(traceback.format_exc())
-            return _abort_and_show(400, title="Bad request")
+            formatted_tb = traceback.format_exc()
+            logger.error(formatted_tb)
+            return _abort_and_show(400, title="Bad request",
+                summary=sys.exc_info()[1], verbose=formatted_tb)
         return value
     return wrapper
 
@@ -133,7 +138,7 @@ class SWORDService(BrowserView):
         adapter = queryMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDEditIRI)
         if adapter is None:
-            raise MethodNotAllowed("Method GET is not supported in this context")
+            raise MethodNotAllowed("Method GET is not supported for %s" % self.request['PATH_INFO'])
         return adapter._handleGet()
 
     def _handlePut(self):

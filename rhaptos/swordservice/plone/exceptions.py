@@ -2,6 +2,11 @@ from rhaptos.atompub.plone.exceptions import PreconditionFailed
 from rhaptos.atompub.plone.exceptions import UnsupportedMediaType
 
 class SwordException(Exception):
+    """ Base class for Sword Exceptions. Each of these has a status, and an
+        href with the url that corresponds to the error. It also has a title
+        and the docstring serves as the summary. Whatever value is raised
+        with the exception is used as the value for the
+        <sword:verboseDescription> tag. """
     @property
     def status(self):
         return self._status
@@ -13,6 +18,10 @@ class SwordException(Exception):
     @property
     def title(self):
         return self._title
+
+    @property
+    def summary(self):
+        return self.__doc__
 
 class ContentNotAcceptable(SwordException):
     """ Content is not acceptable. """
@@ -39,8 +48,9 @@ class ErrorChecksumMismath(SwordException):
     _href = "http://purl.org/net/sword/error/ErrorChecksumMismatch"
 
 class BadRequest(SwordException):
-    """ Similar to the one in zExceptions, but specific to POST requests
-        that are not fully comprehensible. """
+    """Bad Request"""
+    # Similar to the one in zExceptions, but specific to POST requests
+    # that are not fully comprehensible.
     _status = 400
     _title = "Bad Request"
     _href = "http://purl.org/net/sword/error/ErrorBadRequest"
