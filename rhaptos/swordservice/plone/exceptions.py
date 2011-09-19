@@ -51,7 +51,7 @@ class MaxUploadSizeExceeded(SwordException):
     _title = "Maximum Upload Size Exceeded"
     _href = "http://purl.org/net/sword/error/MaxUploadSizeExceeded"
 
-class ErrorChecksumMismath(SwordException):
+class ErrorChecksumMismatch(SwordException):
     """ Checksum does not match. """
     _status = 412
     _title = "Checksum Mismatch"
