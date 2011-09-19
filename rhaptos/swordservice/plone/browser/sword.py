@@ -41,6 +41,7 @@ from rhaptos.swordservice.plone.interfaces import ISWORDStatement
 from rhaptos.swordservice.plone.interfaces import ISWORDStatementAtomAdapter
 from rhaptos.swordservice.plone.exceptions import MediationNotAllowed
 from rhaptos.swordservice.plone.exceptions import SwordException
+from rhaptos.swordservice.plone.exceptions import ContentUnsupported
 
 logger = logging.getLogger(__name__)
 
@@ -293,11 +294,17 @@ class PloneFolderSwordAdapter(PloneFolderAtomPubAdapter):
             # We'll use the atom part to obtain the right content type
             registry = getToolByName(context, 'content_type_registry')
             typeObjectName = registry.findTypeName(name, atom.get_content_type(), atom)
-            context.invokeFactory(typeObjectName, name)
+            try:
+                context.invokeFactory(typeObjectName, name)
+            except ValueError, e:
+                raise ContentUnsupported(str(e))
             return context._getOb(name)
         else:
-            return super(PloneFolderSwordAdapter, self).createObject(
-                context, name, content_type, request)
+            try:
+                return super(PloneFolderSwordAdapter, self).createObject(
+                    context, name, content_type, request)
+            except ValueError, e:
+                raise ContentUnsupported(str(e))
 
     def _updateRequest(self, request, content_type):
         """ Similar to the same method in atompub. We change the request so
