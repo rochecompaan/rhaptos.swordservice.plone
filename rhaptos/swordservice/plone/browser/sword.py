@@ -162,7 +162,7 @@ class SWORDService(BrowserView):
         ifaces = {
             'servicedocument': ISWORDServiceDocument,
             'editmedia': ISWORDEMIRI,
-            'statement': ISWORDStatement,
+            'statement.atom': ISWORDStatement,
             'atom': ISWORDStatementAtomAdapter,
         }
         iface = ifaces.get(name, None)
@@ -234,7 +234,16 @@ class EditIRI(object):
         content_type = getHeader(self.request, 'Content-Type', '')
         if content_type.startswith('application/atom+xml'):
             # Apply more metadata to the item
-            raise NotImplementedError, "TODO"
+            parent = self.context.aq_inner.aq_parent
+            adapter = getMultiAdapter(
+                (parent, self.request), ISWORDContentUploadAdapter)
+
+            body = self.request.get('BODYFILE')
+            body.seek(0)
+            adapter.updateMetadata(self.context, parse(body))
+
+            view = self.context.unrestrictedTraverse('@@sword')
+            return view._handleGet()
         else:
             # The client SHOULD provide a Content-Length set to zero, but it
             # doesn't have to. It SHOULD set In-Progress to false, but it
