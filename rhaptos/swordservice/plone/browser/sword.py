@@ -162,7 +162,7 @@ class SWORDService(BrowserView):
         ifaces = {
             'servicedocument': ISWORDServiceDocument,
             'editmedia': ISWORDEMIRI,
-            'statement': ISWORDStatement,
+            'statement.atom': ISWORDStatement,
             'atom': ISWORDStatementAtomAdapter,
         }
         iface = ifaces.get(name, None)
