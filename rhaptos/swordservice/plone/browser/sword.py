@@ -167,7 +167,7 @@ class SWORDService(BrowserView):
         ifaces = {
             'servicedocument': ISWORDServiceDocument,
             'editmedia': ISWORDEMIRI,
-            'statement': ISWORDStatement,
+            'statement.atom': ISWORDStatement,
             'atom': ISWORDStatementAtomAdapter,
         }
         iface = ifaces.get(name, None)
@@ -430,7 +430,7 @@ class EditMedia(BrowserView):
 
     def __call__(self):
         method = self.request.get('REQUEST_METHOD')
-        callmap = {'PUT': self.PUT, 'GET': self.GET}
+        callmap = {'PUT': self.PUT, 'GET': self.GET, 'POST': self.POST}
         call = callmap.get(method)
         if call is None:
             raise MethodNotAllowed("Method %s not supported" % method)
@@ -452,6 +452,22 @@ class EditMedia(BrowserView):
         response.setHeader('Content-type', 'application/zip')
         response.setHeader("Content-Length", len(data))
         return data
+
+    @show_error_document
+    def POST(self):
+        # If you post on the EM-IRI, its supposed to add media to the item. But
+        # that item could be anything as specified by the content_type_registry,
+        # so this might not be supported. The idea here is to upload into
+        # anything that is folderish, so that you could in theory have types
+        # that know how to create themselves from a request (using the webdav
+        # PUT pattern), yet are still folderish and can contain other media.
+        # We therefore lookup an upload adapter on the context and request, and
+        # do the usual thing, otherwise we raise ContentUnsupported.
+        adapter = queryMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDContentUploadAdapter)
+        if adapter:
+            return adapter()
+        raise ContentUnsupported, "Container is not Folderish"
 
 
 class ListCollection(BrowserView):
