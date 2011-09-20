@@ -30,3 +30,7 @@ class ISWORDStatement(Interface):
 class ISWORDStatementAtomAdapter(Interface):
     """ Marker interface for Atom feed adapter.
     """
+
+class ISWORDListCollection(Interface):
+    """ Marker interface for Atom adapters that lists collection contents.
+    """

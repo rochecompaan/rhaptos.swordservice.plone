@@ -51,4 +51,10 @@
         provides="rhaptos.swordservice.plone.interfaces.ISWORDEMIRI"
         factory=".sword.EditMedia" />
 
+    <adapter
+        for="Products.CMFCore.interfaces.IFolderish
+             zope.publisher.interfaces.http.IHTTPRequest"
+        provides="rhaptos.swordservice.plone.interfaces.ISWORDListCollection"
+        factory=".sword.ListCollection" />
+
 </configure>

@@ -39,6 +39,7 @@ from rhaptos.swordservice.plone.interfaces import ISWORDEMIRI
 from rhaptos.swordservice.plone.interfaces import ISWORDService
 from rhaptos.swordservice.plone.interfaces import ISWORDStatement
 from rhaptos.swordservice.plone.interfaces import ISWORDStatementAtomAdapter
+from rhaptos.swordservice.plone.interfaces import ISWORDListCollection
 from rhaptos.swordservice.plone.exceptions import MediationNotAllowed
 from rhaptos.swordservice.plone.exceptions import SwordException
 from rhaptos.swordservice.plone.exceptions import ContentUnsupported
@@ -92,7 +93,7 @@ def show_error_document(func):
 class SWORDService(BrowserView):
 
     implements(ISWORDService)
-
+    
     @show_error_document
     def __call__(self):
         method = self.request.get('REQUEST_METHOD')
@@ -139,7 +140,11 @@ class SWORDService(BrowserView):
         adapter = queryMultiAdapter(
             (aq_inner(self.context), self.request), ISWORDEditIRI)
         if adapter is None:
-            raise MethodNotAllowed("Method GET is not supported for %s" % self.request['PATH_INFO'])
+            adapter = queryMultiAdapter(
+                (self.context, self.request), ISWORDListCollection)
+        if adapter is None:
+            raise MethodNotAllowed("Method GET is not supported for %s" % \
+                                   self.request['PATH_INFO'])
         return adapter._handleGet()
 
     def _handlePut(self):
@@ -447,3 +452,30 @@ class EditMedia(BrowserView):
         response.setHeader('Content-type', 'application/zip')
         response.setHeader("Content-Length", len(data))
         return data
+
+
+class ListCollection(BrowserView):
+    """
+    """
+    implements(ISWORDListCollection)
+
+    collections_list = ViewPageTemplateFile('collections_list.pt')
+
+
+    @show_error_document
+    def __call__(self):
+        method = self.request.get('REQUEST_METHOD')
+        if method == 'GET':
+            return self._handleGet()
+        else:
+            raise MethodNotAllowed("Method %s not supported" % method)
+
+    def _handleGet(self):
+        """
+        """
+        view = self.__of__(self.context)
+        pt = self.collections_list.__of__(view)
+        return pt()
+
+    def getItems(self):
+        return self.context.objectValues()
