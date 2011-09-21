@@ -467,7 +467,10 @@ class EditMedia(BrowserView):
 
     def __call__(self):
         method = self.request.get('REQUEST_METHOD')
-        callmap = {'PUT': self.PUT, 'GET': self.GET, 'POST': self.POST}
+        callmap = {'PUT': self.PUT,
+                   'GET': self.GET,
+                   'POST': self.POST,
+                   'DELETE': self.DELETE,}
         call = callmap.get(method)
         if call is None:
             raise MethodNotAllowed("Method %s not supported" % method)
@@ -506,6 +509,12 @@ class EditMedia(BrowserView):
             return adapter()
         raise ContentUnsupported, "Container is not Folderish"
 
+    def DELETE(self):
+        """ Delete the contained items of a collection.
+        """
+        ids = self.context.objectIds()
+        self.context.manage_delObjects(ids)
+        return self.request.response.setStatus(200)
 
 class ListCollection(BrowserView):
     """
