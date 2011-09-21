@@ -12,6 +12,7 @@ import transaction
 from zope.interface import implements
 from zope.publisher.interfaces.http import IHTTPRequest
 from zope.component import adapts, getMultiAdapter, queryMultiAdapter
+from OFS.interfaces import IObjectManager
 
 from AccessControl import ClassSecurityInfo
 from Acquisition import aq_inner
@@ -103,6 +104,8 @@ class SWORDService(BrowserView):
             return self._handleGet()
         elif method == 'PUT':
             return self._handlePut()
+        elif method == 'DELETE':
+            return self._handleDelete()
         else:
             raise MethodNotAllowed("Method %s not supported" % method)
 
@@ -153,6 +156,13 @@ class SWORDService(BrowserView):
         if adapter is None:
             raise MethodNotAllowed("Method PUT is not supported in this context")
         return adapter._handlePut()
+
+    def _handleDelete(self):
+        adapter = queryMultiAdapter(
+            (aq_inner(self.context), self.request), ISWORDEditIRI)
+        if adapter is None:
+            raise MethodNotAllowed("Method DELETE is not supported in this context")
+        return adapter()
 
     def __bobo_traverse__(self, request, name):
         """ Implement custom traversal for ISWORDService to allow the use
@@ -223,8 +233,35 @@ class EditIRI(object):
             return self._handleGet()
         elif method == 'PUT':
             return self._handlePut()
+        elif method == 'DELETE':
+            return self._handleDelete()
         else:
             raise MethodNotAllowed("Method %s not supported" % method)
+
+    def _handleDelete(self):
+        """ Delete the module (self.context) completely.
+        """
+        #FIXME:
+        #Refactor this to get the aquisition wrapping correct.
+        #Then use module.DELETE(self.request, self.request.response)
+        uid_catalog = getToolByName(self.context, 'uid_catalog')
+        modules = uid_catalog(UID=self.context.UID())
+        if not modules:
+            return self.request.response.setStatus(204)
+        module = modules[0].getObject()
+        container = self.getModuleContainer(module)
+        if not container:
+            return self.request.response.setStatus(204)
+        msg = container.manage_delObjects(module.id)
+        return self.request.response.setStatus(200)
+
+    def getModuleContainer(self, module):
+        container = module.aq_parent
+        while container:
+            if IObjectManager.isImplementedBy(container):
+                return container
+            container = container.aq_parent
+        return None
 
     def _handleGet(self, **kw):
         """ A GET on the Edit-IRI should return the deposit receipt. You
