@@ -258,7 +258,7 @@ class EditIRI(object):
     def getModuleContainer(self, module):
         container = module.aq_parent
         while container:
-            if IObjectManager.isImplementedBy(container):
+            if IObjectManager.providedBy(container):
                 return container
             container = container.aq_parent
         return None
