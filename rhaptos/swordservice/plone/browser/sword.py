@@ -249,19 +249,11 @@ class EditIRI(object):
         if not modules:
             return self.request.response.setStatus(204)
         module = modules[0].getObject()
-        container = self.getModuleContainer(module)
+        container = module.aq_parent
         if not container:
             return self.request.response.setStatus(204)
-        msg = container.manage_delObjects(module.id)
+        container.manage_delObjects(module.id)
         return self.request.response.setStatus(200)
-
-    def getModuleContainer(self, module):
-        container = module.aq_parent
-        while container:
-            if IObjectManager.providedBy(container):
-                return container
-            container = container.aq_parent
-        return None
 
     def _handleGet(self, **kw):
         """ A GET on the Edit-IRI should return the deposit receipt. You
@@ -470,7 +462,7 @@ class EditMedia(BrowserView):
         callmap = {'PUT': self.PUT,
                    'GET': self.GET,
                    'POST': self.POST,
-                   'DELETE': self.DELETE,}
+                   'DELETE': None,}
         call = callmap.get(method)
         if call is None:
             raise MethodNotAllowed("Method %s not supported" % method)
@@ -508,13 +500,6 @@ class EditMedia(BrowserView):
         if adapter:
             return adapter()
         raise ContentUnsupported, "Container is not Folderish"
-
-    def DELETE(self):
-        """ Delete the contained items of a collection.
-        """
-        ids = self.context.objectIds()
-        self.context.manage_delObjects(ids)
-        return self.request.response.setStatus(200)
 
 class ListCollection(BrowserView):
     """
