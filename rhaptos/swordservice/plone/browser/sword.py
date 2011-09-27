@@ -456,14 +456,17 @@ class SWORDStatementAtomAdapter(BrowserView):
 class EditMedia(BrowserView):
     __name__ = "editmedia"
     adapts(IATFile, IHTTPRequest)
+    
+    def __init__(self, context, request):
+        super(BrowserView, self).__init__(context, request)
+        self.callmap = {'PUT': self.PUT,
+                        'GET': self.GET,
+                        'POST': self.POST,
+                        'DELETE': None,}
 
     def __call__(self):
         method = self.request.get('REQUEST_METHOD')
-        callmap = {'PUT': self.PUT,
-                   'GET': self.GET,
-                   'POST': self.POST,
-                   'DELETE': None,}
-        call = callmap.get(method)
+        call = self.callmap.get(method)
         if call is None:
             raise MethodNotAllowed("Method %s not supported" % method)
         return call()
