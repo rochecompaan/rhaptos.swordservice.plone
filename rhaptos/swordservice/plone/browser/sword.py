@@ -88,6 +88,7 @@ def show_error_document(func):
             return _abort_and_show(400, title="Bad request",
                 summary=sys.exc_info()[1], verbose=formatted_tb)
         return value
+    wrapper.__doc__ = func.__doc__
     return wrapper
 
 
