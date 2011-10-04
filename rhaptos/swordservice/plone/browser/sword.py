@@ -277,23 +277,19 @@ class EditIRI(object):
             body.seek(0)
             adapter.updateMetadata(self.context, parse(body))
 
-            view = self.context.unrestrictedTraverse('@@sword')
-            return view._handleGet()
-        else:
-            # The client SHOULD provide a Content-Length set to zero, but it
-            # doesn't have to. It SHOULD set In-Progress to false, but it
-            # doesn't have to. We could check that the body is empty, but why
-            # bother. Publish.
-            in_progress = getHeader(self.request, 'In-Progress', 'false')
-            if in_progress == 'false':
-                self._handlePublish()
-                # We SHOULD return a deposit receipt, status code 200, and the
-                # Edit-IRI in the Location header.
-                context = aq_inner(self.context)
-                self.request.response.setHeader('Location', '%s/sword' % context.absolute_url())
-                self.request.response.setStatus(200)
-                view = context.unrestrictedTraverse('@@sword')
-                return view._handleGet()
+        # If In-Progress is set to false or omitted, try to publish
+        in_progress = getHeader(self.request, 'In-Progress', 'false')
+        if in_progress == 'false':
+            self._handlePublish()
+            # We SHOULD return a deposit receipt, status code 200, and the
+            # Edit-IRI in the Location header.
+            context = aq_inner(self.context)
+            self.request.response.setHeader('Location',
+                '%s/sword' % context.absolute_url())
+            self.request.response.setStatus(200)
+
+        view = context.unrestrictedTraverse('@@sword')
+        return view._handleGet()
 
     def _handlePublish(self):
         """ Default implementation does nothing, because ATFile has no
