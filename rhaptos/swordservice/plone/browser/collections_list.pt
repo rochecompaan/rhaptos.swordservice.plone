@@ -5,7 +5,7 @@
 
     <!-- collections list -->
      <entry tal:repeat="item view/getItems">
-        <title>Geometry - Grade 10</title>
+        <title tal:content="item/Title">Geometry - Grade 10</title>
         <link rel="edit" href="[workspace url]/[[module id]/sword" tal:attributes="href string:${item/absolute_url}/sword" />
         <link rel="edit-media" href="[workspace url]/[module url]/sword/editmedia" tal:attributes="href string:${item/absolute_url}/sword/editmedia" />
     </entry>
