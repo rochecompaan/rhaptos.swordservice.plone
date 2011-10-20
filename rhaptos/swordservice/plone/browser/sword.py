@@ -44,6 +44,7 @@ from rhaptos.swordservice.plone.interfaces import ISWORDListCollection
 from rhaptos.swordservice.plone.exceptions import MediationNotAllowed
 from rhaptos.swordservice.plone.exceptions import SwordException
 from rhaptos.swordservice.plone.exceptions import ContentUnsupported
+from rhaptos.swordservice.plone.exceptions import BadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +279,10 @@ class EditIRI(object):
             body = self.request.get('BODYFILE')
             body.seek(0)
             adapter.updateMetadata(self.context, parse(body))
+        elif content_type:
+            # A content type is provided, and its not atom+xml
+            raise BadRequest(
+                "You cannot POST content of type %s to the SE-IRI" % content_type)
 
         # If In-Progress is set to false or omitted, try to publish
         in_progress = getHeader(self.request, 'In-Progress', 'false')
