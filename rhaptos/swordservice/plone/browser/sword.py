@@ -265,11 +265,13 @@ class EditIRI(object):
     def _handlePost(self):
         """ A POST fo the Edit-IRI can do one of two things. You can either add
             more metadata by posting an atom entry, or you can publish the
-            module with an empty request and In-Progress set to false. """
+            module with an empty request and In-Progress set to false.
+        """
+        context = aq_inner(self.context)
         content_type = getHeader(self.request, 'Content-Type', '')
         if content_type.startswith('application/atom+xml'):
             # Apply more metadata to the item
-            parent = self.context.aq_inner.aq_parent
+            parent = context.aq_parent
             adapter = getMultiAdapter(
                 (parent, self.request), ISWORDContentUploadAdapter)
 
@@ -283,7 +285,6 @@ class EditIRI(object):
             self._handlePublish()
             # We SHOULD return a deposit receipt, status code 200, and the
             # Edit-IRI in the Location header.
-            context = aq_inner(self.context)
             self.request.response.setHeader('Location',
                 '%s/sword' % context.absolute_url())
             self.request.response.setStatus(200)
