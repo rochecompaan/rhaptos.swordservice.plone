@@ -10,6 +10,30 @@
         class=".sword.SWORDService"
         permission="cmf.SetOwnPassword" />
 
+    <browser:page
+        for="*"
+        name="generator-version"
+        class=".utils.UtilsView"
+        attribute="generatorVersion"
+        permission="zope2.View"
+        />
+
+    <browser:page
+        for="*"
+        name="generator-uri"
+        class=".utils.UtilsView"
+        attribute="generatorURI"
+        permission="zope2.View"
+        />
+
+    <browser:page
+        for="*"
+        name="generator-tag"
+        class=".utils.UtilsView"
+        attribute="generatorTag"
+        permission="zope2.View"
+        />
+
     <!-- This adapts folderish objects into sword collections. Override this
          for your own types -->
     <adapter

@@ -41,7 +41,10 @@
         </sword:packaging>
     </sword:originalDeposit>
 
-    <sword:treatment tal:content="view/treatment">Stored</sword:treatment>
+    <sword:treatment tal:content="view/treatment">
+        <span tal:replace="context/@@generator-tag">generator tag</span>
+        Stored
+    </sword:treatment>
     <title tal:content="context/Title">package title</title>
     <id tal:content="context/absolute_url">1234</id>
     <updated tal:content="context/modified">2008-08-18T14:27:08Z</updated>
