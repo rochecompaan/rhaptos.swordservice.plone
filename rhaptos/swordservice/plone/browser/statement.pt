@@ -42,7 +42,6 @@
     </sword:originalDeposit>
 
     <sword:treatment tal:content="view/treatment">
-        <span tal:replace="context/@@generator-tag">generator tag</span>
         Stored
     </sword:treatment>
     <title tal:content="context/Title">package title</title>
