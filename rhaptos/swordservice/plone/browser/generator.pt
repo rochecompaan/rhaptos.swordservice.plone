@@ -1,11 +1,5 @@
 <metal:generator define-macro="generator"
     tal:define="uri view/generatorURI;
                 version view/generatorVersion;">
-    <generator uri="rhaptos.swordservice.plone" version="1.1"
-        tal:attributes="uri uri;
-                        version version">
-        <span tal:replace="string:uri:${uri} version:${version}">
-            uri:"rhaptos.swordservice.plone" version:"1.1" 
-        </span>
-    </generator>
+    <generator uri="rhaptos.swordservice.plone" version="1.1" tal:attributes="uri uri; version version"/>
 </metal:generator>
